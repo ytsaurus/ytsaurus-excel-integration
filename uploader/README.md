@@ -1,4 +1,4 @@
-## excel-uploader — сервис загрузки Excel в YTsaurus
+## excel-uploader — service for uploading Excel spreadsheets to YTsaurus static tables
 
 * [API](./docs/api.md)
 * [Developer guide](./docs/developer_guide.md)

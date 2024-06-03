@@ -1,5 +1,5 @@
-# YT Excel integration
+# YTsaurus Excel integration
 
-Содержит два микросервиса
-* [Exporter](./exporter/README.md) — выгружает данные статических таблиц YT или результаты YT Query Tracker'а в Excel 
-* [Uploader](./uploader/README.md) — заливает данные из Excel таблицы в статическую таблицу YT
+Includes two microservices
+* [Exporter](./exporter/README.md) — downloads data from YTsaurus Static tables or YTsaurus Query Tracker results as an Excel spreadsheet
+* [Uploader](./uploader/README.md) — uploads data from an Excel spreadsheet into a YTsaurus Static tables
