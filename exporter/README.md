@@ -1,4 +1,4 @@
-# excel-exporter
+# excel-exporter ![Build](https://github.com/ytsaurus/ytsaurus-excel-integration/actions/workflows/go.yaml/badge.svg)
 
 Service for downloading data from YTaurus Static tables and QueryTracker results as Excel spreadsheets
 

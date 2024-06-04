@@ -1,5 +1,5 @@
 # YTsaurus Excel integration
 
 Includes two microservices
-* [Exporter](./exporter/README.md) — downloads data from YTsaurus Static tables or YTsaurus QueryTracker results as an Excel spreadsheet
-* [Uploader](./uploader/README.md) — uploads data from an Excel spreadsheet into a YTsaurus Static tables
+* [Exporter](./exporter) — downloads data from YTsaurus Static tables or YTsaurus QueryTracker results as an Excel spreadsheet
+* [Uploader](./uploader) — uploads data from an Excel spreadsheet into a YTsaurus Static tables

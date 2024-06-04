@@ -1,4 +1,4 @@
-# excel-uploader
+# excel-uploader ![Build](https://github.com/ytsaurus/ytsaurus-excel-integration/actions/workflows/go.yaml/badge.svg)
 
 Service for uploading Excel spreadsheets to YTsaurus static tables.
 
