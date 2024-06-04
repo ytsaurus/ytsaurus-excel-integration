@@ -1,42 +1,44 @@
 # API
 
-**GET \<cluster\>/api/v1/upload** - загрузить строки excel таблицы (или пересечение с подмножеством колонок)
-в заданном диапазоне в статическую таблицу YT со строгой схемой.
+## Upload Excel spreadsheet to YTsaurus static table.
+
+**GET \<cluster\>/api/v1/upload** — upload data from an Excel spreadsheet into a YTsaurus Static table
 
 ### Request
 
-Excel файл передаётся через `multipart/form-data`; название формы - `uploadfile`.
+The Excel file is passed via `multipart/form-data`; form name — `uploadfile`.
 
-Управляющая часть запроса передаётся через URL params:
-* **path** - ypath путь до yt таблицы
-* **start_row** - опциональный номер строки, с которой начнётся загрузка; дефолтное значение - 1
-* **row_count** - опциональное количество строк
-* **sheet** - опциональное название excel страницы; по умолчанию используется первая
-* **header** - опциональный флаг, позволяющий задавать маппинг колонок в первой строке excel таблицы
-* **types** - опциональный флаг, позволяющий задавать типы колонок в первой или второй строке excel таблицы
-* **columns** - опциональный маппинг колонок yt -> excel, например `{"name":"A", "name2": "A", "id": "D"}`
-* **append** - опциональный флаг, позволяющий дописывать строки в конец таблицы; по умолчанию таблица будет затёрта
-* **create** - опциональный флаг, позволяющий создать таблицу определив схему из параметров запроса; по умолчанию ожидается, что таблица создана предварительно
+The control part of the request is passed via URL params:
+* (required) **path** — ypath path to YTsaurus table
+* (optional) **start_row** — first row to upload; optional; default — 1
+* (optional) **row_count** — number of rows to upload; optional; default — all 
+* (optional) **sheet** — Excel spreadsheet name; optional; default — first spreadsheet
+* (optional) **header** — boolean flag to read (YTsaurus -> Excel) column mapping from the first row of Excel spreadsheet; default — false
+* (optional) **types** — boolean flag to read column types from the first or the second row of Excel spreadsheet; default — false
+* (optional) **columns** — (YTsaurus -> Excel) column mapping, for example `{"name":"A", "name2": "A", "id": "D"}`
+* (optional) **append** — boolean flag to append new rows to the table instead of overwriting; default — false, the table will be overwritten
+* (optional) **create** — boolean flag to create table by inferring columns from request; default — false, the table is expected to be pre-created
 
-Если диапазон строк не указан (`start_row=0 && row_count=0`) и `header=true`, первая строка будет пропущена.
+If the row range is not specified (`start_row=0 && row_count=0`) and `header=true`, then the first row will not be uploaded.
 
-Дефолтный маппинг колонок сопоставляет их по позиции: первая колонка в схеме будет читаться из столбца `A`, вторая из `B` и т.д.
+Default (YTsaurus -> Excel) column mapping matches them by position: the first column in the table schema will be matched with column `A`, the second with column `B`, etc.
 
-При создании таблицы используется следующая логика по определению имён колонок YT таблицы:
-* Используются значения из параметра **columns**, если указаны.
-* В противном случае используются значения из первой строки Excel таблицы, если `header=true`
-* Используются имена колонок Excel: `A, B, C...`
+When creating a table (`create==true`), the following logic is used to determine the names of YTsaurus table columns:
+1. Column names from **columns** are used, if provided.
+2. if `header==true` the the names from the first Excel row are used
+3. Excel column names are used: `A, B, C...`
 
-Типы колонок по умолчанию равны any.
-При `types=true` типы читаются из первой строки Excel таблицы, если `header=false`, и из второй, если `header=true`.
+By default all Excel columns are exported as YTsaurus type `any`.
+If `types==true && header=false` then types are read from the first Excel row.
+If `types==true && header=true` then types are read from the second Excel row.
 
 ### Response
 
-В случае успеха вернётся 200 и файл, в случае ошибки - 400 или 500 и ошибка в виде json'а.
+Successful request results in 200 Ok. In case of error 400 or 500 is returned with a json error message.
 
-Информация об ошибке также содержится в http header'ах: `X-Yt-Error`, `X-Yt-Response-Code` и `X-Yt-Response-Message`.
+The error is additionally added to the http headers: `X-Yt-Error`, `X-Yt-Response-Code` and `X-Yt-Response-Message`.
 
-Пример ошибки:
+Example error:
 ```
 {
   "code": 1,
@@ -66,9 +68,8 @@ Excel файл передаётся через `multipart/form-data`; назва
 }
 ```
 
-### Ограничения
+### Limits
 
-* Используется только один excel sheet
-* Максимальное число строк — 1048576
-* Максимальное число столбцов — 16384
-* Максимальный размер выходного файла — TODO
+* Only one excel sheet is uploaded
+* Max number of rows — 1048576
+* Max number of columns — 16384

@@ -1,8 +1,8 @@
-# Авторизация
+# Authorization
 
-Предполагается использование сервиса только через web интерфейс.
+The service is supposed to be used only through the web interface.
 
-Авторизация производится с помощью `Session_id` куки:
-* UI посылает в микросервис `Session_id` куку
-* микросервис форвардит её в YTsaurus proxy
-* YTsaurus proxy меняет куку на пользователя и проверяет @acl
+Authorization is performed using the `Session_id` cookie:
+* The user interface, along with the request, sends the `Session_id` cookie to the microservice
+* microservice forwards cookie to YTsaurus proxy
+* YTsaurus proxy exchanges the cookie for the user and checks @acl
