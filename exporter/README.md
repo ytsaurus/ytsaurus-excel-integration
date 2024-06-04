@@ -41,8 +41,10 @@ curl -g -v -X GET http://localhost:6029/hahn/api/export\
 
 ### Run benchmarks
 
+Requires running YTsaurus cluster.
+
 ```
-ya make -r -tt yt/microservices/excel/exporter/internal/exporter --test-stdout --test-param '-test.bench=.' --test-param '-test.run="^$"' --test-param '-test.benchmem=true' --test-param '-test.benchtime=20x'  2> >(grep "/op")
+YT_PROXY=my-cluster YT_TOKEN=my-token go test -mod=readonly go.ytsaurus.tech/yt/microservices/excel/exporter/... -v -test.bench=. -test.run="^$"  -test.benchmem=true  -test.benchtime=20x
 BenchmarkExport/read/all/small-8                      20          43517066 ns/op         1479603 B/op      43390 allocs/op
 BenchmarkExport/convert/all/small-8                   20          30471422 ns/op         4131890 B/op     113322 allocs/op
 BenchmarkExport/read/all/medium-8                     20         104344948 ns/op        14007010 B/op     431376 allocs/op
