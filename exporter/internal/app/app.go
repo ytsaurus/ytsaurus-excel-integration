@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/sync/errgroup"
+
 	"go.ytsaurus.tech/library/go/core/log"
 	"go.ytsaurus.tech/library/go/httputil/middleware/httpmetrics"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
-	"golang.org/x/sync/errgroup"
 )
 
 const httpServerGracefulStopTimeout = 30 * time.Second

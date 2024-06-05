@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
+	"gopkg.in/yaml.v2"
+
 	"go.ytsaurus.tech/library/go/core/log"
 	logzap "go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/ytlog"
 	"go.ytsaurus.tech/yt/microservices/excel/exporter/internal/app"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
-	"gopkg.in/yaml.v2"
 )
 
 func main() {

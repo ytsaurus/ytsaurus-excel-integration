@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
 	"go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/guid"
 	"go.ytsaurus.tech/yt/go/schema"

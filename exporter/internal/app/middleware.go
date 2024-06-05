@@ -13,13 +13,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/atomic"
+	"golang.org/x/xerrors"
+
 	"go.ytsaurus.tech/library/go/core/log"
 	"go.ytsaurus.tech/library/go/core/log/ctxlog"
 	"go.ytsaurus.tech/yt/go/guid"
 	"go.ytsaurus.tech/yt/go/proto/core/rpc"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yterrors"
-	"golang.org/x/xerrors"
 )
 
 const (
