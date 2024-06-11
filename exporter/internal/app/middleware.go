@@ -143,12 +143,9 @@ func (c cookieCredentials) SetExtension(req *rpc.TRequestHeader) {
 	)
 }
 
-// sessionIDCookie is a name of a cookie which is forwarded from frontend to yt proxy.
-//
-// There will be no need in this action when tvm support is added to proxy (https://st.yandex-team.ru/YT-4570). // todo
-const sessionIDCookie = "Session_id"
-
 // ForwardCookie creates a middleware that extracts specific cookie and adds it to request context.
+//
+// There will be no need in this action when tvm support is added to proxy (https://st.yandex-team.ru/YT-4570). // TODO
 func ForwardCookie(name string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +160,7 @@ func ForwardCookie(name string) func(next http.Handler) http.Handler {
 	}
 }
 
-// XYaUserTicket is http header that should be used for user ticket transfer.
+// XYaUserTicket is an http header used for user ticket transfer.
 const XYaUserTicket = "X-Ya-User-Ticket"
 
 // ForwardUserTicket is a middleware that extracts X-Ya-User-Ticket header and adds it to request context.

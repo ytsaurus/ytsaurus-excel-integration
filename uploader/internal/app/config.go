@@ -10,6 +10,8 @@ import (
 const (
 	defaultHTTPHandlerTimeout = 2 * time.Minute
 	defaultMaxExcelFileSize   = 1024 * 1024 * 10
+
+	defaultAuthCookieName = "Session_id"
 )
 
 // Config is an app config.
@@ -18,6 +20,10 @@ type Config struct {
 	DebugHTTPAddr      string        `yaml:"debug_http_addr"`
 	HTTPHandlerTimeout time.Duration `yaml:"http_handler_timeout"`
 	MaxExcelFileSize   int           `yaml:"max_excel_file_size_bytes"`
+	// AuthCookieName is a request cookie that service forwards to YT.
+	// YT proxy uses this cookie to authorize requester.
+	// Session_id by default.
+	AuthCookieName string `yaml:"auth_cookie_name"`
 
 	Clusters        []*ClusterConfig          `yaml:"clusters"`
 	clustersByProxy map[string]*ClusterConfig `yaml:"-"`
@@ -44,6 +50,10 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		c.MaxExcelFileSize = defaultMaxExcelFileSize
 	}
 
+	if c.AuthCookieName == "" {
+		c.AuthCookieName = defaultAuthCookieName
+	}
+
 	if len(c.Clusters) == 0 {
 		return xerrors.New("clusters can not be empty")
 	}
@@ -57,7 +67,6 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		if conf.APIEndpointName == "" {
 			conf.APIEndpointName = conf.Proxy
 		}
-		conf.maxExcelFileSize = c.MaxExcelFileSize
 	}
 	c.clustersByProxy = byProxy
 
@@ -71,6 +80,4 @@ type ClusterConfig struct {
 	//
 	// Equals to Proxy by default.
 	APIEndpointName string `yaml:"api_endpoint_name"`
-
-	maxExcelFileSize int
 }

@@ -53,7 +53,7 @@ func (a *App) Run(ctx context.Context) error {
 	r := chi.NewMux()
 	r.Use(httpmetrics.New(a.metrics.WithPrefix("http")))
 	r.Use(timeout(a.conf.HTTPHandlerTimeout))
-	r.Use(requestLog(a.l))
+	r.Use(requestLog(a.l, int64(a.conf.MaxExcelFileSize)))
 	r.Use(CORS())
 
 	for _, c := range a.conf.Clusters {
@@ -67,7 +67,7 @@ func (a *App) Run(ctx context.Context) error {
 		}
 
 		api := NewAPI(c, yc, a.l)
-		apiRouter := r.With(ForwardCookie(sessionIDCookie)).With(ForwardUserTicket)
+		apiRouter := r.With(ForwardCookie(a.conf.AuthCookieName)).With(ForwardUserTicket)
 		clusterMetrics := a.metrics.WithTags(map[string]string{"yt-cluster": c.Proxy})
 		api.RegisterMetrics(clusterMetrics)
 		apiRouter.Mount("/"+c.APIEndpointName+"/api", api.Routes())

@@ -68,10 +68,10 @@ func (a *App) Run(ctx context.Context) error {
 		}
 
 		api := NewAPI(c, yc, a.l)
-		apiRouter := r.With(ForwardCookie(sessionIDCookie)).With(ForwardUserTicket)
+		apiRouter := r.With(ForwardCookie(a.conf.AuthCookieName)).With(ForwardUserTicket)
 		clusterMetrics := a.metrics.WithTags(map[string]string{"yt-cluster": c.Proxy})
 		api.RegisterMetrics(clusterMetrics)
-		apiRouter.Mount("/"+c.Proxy+"/api", api.Routes())
+		apiRouter.Mount("/"+c.APIEndpointName+"/api", api.Routes())
 		api.SetReady()
 	}
 

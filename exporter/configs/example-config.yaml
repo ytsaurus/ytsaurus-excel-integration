@@ -1,19 +1,27 @@
-# API для кластера <cluster> будет доступно по http_addr/<cluster>/...
+# API.
 http_addr: ":6029"
-# Адрес метрик соломона и pprof'а (:6060 - дефолтный адрес pprof).
+
+# Metrics & pprof.
 debug_http_addr: ":6060"
 
-# Максимальное время обработки http запроса.
-# Дефолт - 2m секунд.
+# Max request processing time.
+# Default: 2m.
 http_handler_timeout: 2m
 
-# Максимальный размер выходного файла.
-# Вычисляется эвристически.
-# Дефолтное значение - 52428800 (50 Mb)
+# Max output file weight (file size heuristic).
+# Default: 52428800 (50 Mb)
 max_excel_file_size_bytes: 104857600 # (100 MB)
 
-# Список обслуживаемых инстансом кластеров.
-# При добавлении нового кластера приложение нужно передеплоить.
-# Каждый кластер имеет кластер-специфичные настройки.
+# Name of the request cookie that service forwards to YT.
+# YT proxy uses this cookie to authorize requester.
+# Default: Session_id.
+# Reasonable value for OS installation: YTCypressCookie
+auth_cookie_name: ""
+
+# List of clusters with cluster-specific settings.
 clusters:
   - proxy: hahn
+    # Specifies proxy alias used in API endpoint path:
+    #   <http_addr>/<api_endpoint_name>/api/
+    # Default: equals to proxy.
+    api_endpoint_name: hahn

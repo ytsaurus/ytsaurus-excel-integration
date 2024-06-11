@@ -35,12 +35,12 @@ const (
 )
 
 // requestLog logs
-//   - http method, path, query, body
+//   - http method, path, query, body size
 //   - generated guid
 //   - balancer's request id (X-Req-Id header)
 //   - request execution time, status and number of bytes written
 //   - original client IP
-func requestLog(l log.Structured) func(next http.Handler) http.Handler {
+func requestLog(l log.Structured, bodySizeLimit int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestID := guid.New()
@@ -50,7 +50,6 @@ func requestLog(l log.Structured) func(next http.Handler) http.Handler {
 			resp := &bytes.Buffer{}
 			ww.Tee(resp)
 
-			const bodySizeLimit = 1024 * 1024 * 50
 			body, err := io.ReadAll(io.LimitReader(r.Body, bodySizeLimit))
 			if err != nil {
 				l.Error("error reading request body", log.Error(err))
@@ -64,6 +63,7 @@ func requestLog(l log.Structured) func(next http.Handler) http.Handler {
 				log.String("method", r.Method),
 				log.String("path", r.URL.Path),
 				log.String("query", r.Form.Encode()),
+				log.Int("body_size", len(body)),
 				log.String("origin", Origin(r)),
 				log.String("l7_req_id", r.Header.Get(xReqIDHTTPHeader)))
 
@@ -146,12 +146,9 @@ func (c cookieCredentials) SetExtension(req *rpc.TRequestHeader) {
 	)
 }
 
-// sessionIDCookie is a name of a cookie which is forwarded from frontend to yt proxy.
-//
-// There will be no need in this action when tvm support is added to proxy (https://st.yandex-team.ru/YT-4570). // todo
-const sessionIDCookie = "Session_id"
-
 // ForwardCookie creates a middleware that extracts specific cookie and adds it to request context.
+//
+// There will be no need in this action when tvm support is added to proxy (https://st.yandex-team.ru/YT-4570). // TODO
 func ForwardCookie(name string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +167,7 @@ func ForwardCookie(name string) func(next http.Handler) http.Handler {
 	}
 }
 
-// XYaUserTicket is http header that should be used for user ticket transfer.
+// XYaUserTicket is an http header used for user ticket transfer.
 const XYaUserTicket = "X-Ya-User-Ticket"
 
 // ForwardUserTicket is a middleware that extracts X-Ya-User-Ticket header and adds it to request context.
