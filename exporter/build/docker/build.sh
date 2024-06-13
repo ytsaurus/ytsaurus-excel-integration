@@ -50,9 +50,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 excel_exporter="${ytsaurus_source_path}/yt/microservices/excel/exporter/cmd/excel-exporter/excel-exporter"
-credits="${ytsaurus_source_path}/yt/docker/ytsaurus-excel-exporter/credits"
+credits="${ytsaurus_source_path}/yt/microservices/excel/exporter/build/docker/credits"
 
-dockerfile="${ytsaurus_source_path}/yt/docker/ytsaurus-excel-exporter/Dockerfile"
+dockerfile="${ytsaurus_source_path}/yt/microservices/excel/exporter/build/docker/Dockerfile"
 
 cp ${excel_exporter} ${output_path}
 cp ${dockerfile} ${output_path}
