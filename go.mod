@@ -6,6 +6,7 @@ require (
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/golang/protobuf v1.5.4
+	github.com/rs/cors v1.10.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xuri/excelize/v2 v2.6.1
 	go.uber.org/atomic v1.11.0
@@ -52,11 +53,11 @@ require (
 	go.ytsaurus.tech/library/go/ptr v0.0.1 // indirect
 	go.ytsaurus.tech/library/go/x/xreflect v0.0.2 // indirect
 	go.ytsaurus.tech/library/go/x/xruntime v0.0.3 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/image v0.15.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

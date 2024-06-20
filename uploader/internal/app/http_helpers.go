@@ -3,16 +3,42 @@ package app
 import (
 	"net"
 	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/rs/cors"
 )
 
-func CORS() func(next http.Handler) http.Handler {
+func CORS(conf *CORSConfig) func(next http.Handler) http.Handler {
+	c := cors.New(cors.Options{
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Origin", "Accept", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders: []string{"Content-Disposition"},
+		AllowOriginFunc: func(origin string) bool {
+			u, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+
+			for _, h := range conf.AllowedHosts {
+				if u.Host == h {
+					return true
+				}
+			}
+
+			for _, s := range conf.AllowedHostSuffixes {
+				if strings.HasSuffix(u.Host, s) {
+					return true
+				}
+			}
+
+			return false
+		},
+		AllowCredentials: true,
+	})
+
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			// CORS middleware
-
-			next.ServeHTTP(w, r)
-		})
+		return c.Handler(next)
 	}
 }
 

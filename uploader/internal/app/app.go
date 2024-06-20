@@ -54,7 +54,7 @@ func (a *App) Run(ctx context.Context) error {
 	r.Use(httpmetrics.New(a.metrics.WithPrefix("http")))
 	r.Use(timeout(a.conf.HTTPHandlerTimeout))
 	r.Use(requestLog(a.l, int64(a.conf.MaxExcelFileSize)))
-	r.Use(CORS())
+	r.Use(CORS(a.conf.CORS))
 
 	for _, c := range a.conf.Clusters {
 		l := log.With(a.l.Logger(), log.String("cluster", c.Proxy)).Structured()

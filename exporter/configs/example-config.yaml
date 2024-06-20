@@ -18,6 +18,13 @@ max_excel_file_size_bytes: 104857600 # (100 MB)
 # Reasonable value for OS installation: YTCypressCookie
 auth_cookie_name: ""
 
+# CORS settings.
+cors:
+  # Allowed hostnames e.g. myorigin.com, checked via exact match: origin.Host == "myorigin.com"
+  allowed_hosts: []
+  # Allowed hostname suffixes e.g. .myorigin.com, checked via HasSuffix(origin.Host, ".myorigin.com")
+  allowed_host_suffixes: []
+
 # List of clusters with cluster-specific settings.
 clusters:
   - proxy: hahn

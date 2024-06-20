@@ -25,6 +25,8 @@ type Config struct {
 	// Session_id by default.
 	AuthCookieName string `yaml:"auth_cookie_name"`
 
+	CORS *CORSConfig `yaml:"cors"`
+
 	Clusters        []*ClusterConfig          `yaml:"clusters"`
 	clustersByProxy map[string]*ClusterConfig `yaml:"-"`
 }
@@ -72,6 +74,13 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 	c.clustersByProxy = byProxy
 
 	return nil
+}
+
+type CORSConfig struct {
+	// Allowed hosts is a list of allowed hostnames checked via exact match.
+	AllowedHosts []string `yaml:"allowed_hosts"`
+	// Allowed hosts is a list of allowed hostname suffixes checked via HasSuffix function.
+	AllowedHostSuffixes []string `yaml:"allowed_host_suffixes"`
 }
 
 type ClusterConfig struct {
