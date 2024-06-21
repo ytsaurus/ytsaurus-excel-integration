@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	ytdockertest "go.ytsaurus.tech/yt/go/dockertest"
+	"go.ytsaurus.tech/yt/go/dockertest"
 	"go.ytsaurus.tech/yt/go/mapreduce"
 )
 
@@ -15,10 +15,14 @@ func TestMain(m *testing.M) {
 		os.Exit(mapreduce.JobMain())
 	}
 
+	os.Exit(run(m))
+}
+
+func run(m *testing.M) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c, err := ytdockertest.InitYTsaurusContainer(ctx)
+	c, err := dockertest.InitYTsaurusContainer(ctx)
 	if err != nil {
 		log.Fatalf("failed to start container: %s", err)
 	}
@@ -28,5 +32,5 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
-	os.Exit(m.Run())
+	return m.Run()
 }
