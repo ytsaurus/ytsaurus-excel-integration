@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "ytsaurus-excel-exporter"
+  labels:
+    {{- include "ytsaurus-excel-chart.exporterLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ytsaurus-excel-chart.exporterSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ytsaurus-excel-chart.exporterLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          command: ["/usr/bin/excel-exporter", "-config", "/etc/config.yaml"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.exporter.repository }}:{{ .Values.image.exporter.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.exporter.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.settings.exporter.http_port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.settings.exporter.debug_http_port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+            {{- with (first .Values.settings.exporter.clusters) }}
+              path: /{{- .api_endpoint_name -}}/api/ready
+            {{- end }}
+              port: {{ .Values.settings.exporter.http_port }}
+
+          readinessProbe:
+            httpGet:
+            {{- with (first .Values.settings.exporter.clusters) }}
+              path: /{{- .api_endpoint_name -}}/api/ready
+            {{- end }}
+              port: {{ .Values.settings.exporter.http_port }}
+          volumeMounts:
+            - mountPath: /etc/config.yaml
+              name: config
+              readOnly: true
+              subPath: exporter-config.yaml
+            - name: exporter-logs
+              mountPath: /tmp
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: "ytsaurus-excel-cm"
+          name: config
+
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: exporter-logs
+      spec: 
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi

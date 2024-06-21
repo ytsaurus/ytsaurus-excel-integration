@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "ytsaurus-excel-uploader"
+  labels:
+    {{- include "ytsaurus-excel-chart.uploaderLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ytsaurus-excel-chart.uploaderSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ytsaurus-excel-chart.uploaderLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          command: ["/usr/bin/excel-uploader", "-config", "/etc/config.yaml"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.uploader.repository }}:{{ .Values.image.uploader.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.uploader.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.settings.uploader.http_port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.settings.uploader.debug_http_port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+            {{- with (first .Values.settings.uploader.clusters) }}
+              path: /{{- .api_endpoint_name -}}/api/ready
+            {{- end }}
+              port: {{ .Values.settings.uploader.http_port }}
+
+          readinessProbe:
+            httpGet:
+            {{- with (first .Values.settings.uploader.clusters) }}
+              path: /{{- .api_endpoint_name -}}/api/ready
+            {{- end }}
+              port: {{ .Values.settings.uploader.http_port }}
+          volumeMounts:
+            - mountPath: /etc/config.yaml
+              name: config
+              readOnly: true
+              subPath: uploader-config.yaml
+            - name: uploader-logs
+              mountPath: /tmp
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: "ytsaurus-excel-cm"
+          name: config
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: uploader-logs
+      spec: 
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi

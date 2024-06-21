@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ytsaurus-excel-cm
+  namespace: {{ .Release.Namespace }}
+  labels:
+     {{- include "ytsaurus-excel-chart.commonLabels" . | nindent 4 }}
+data:
+  uploader-config.yaml: |
+    cors: {{ .Values.settings.cors | toYaml | nindent 8 }}
+    http_addr: ":{{- .Values.settings.uploader.http_port -}}"
+    debug_http_addr: ":{{- .Values.settings.uploader.debug_http_port -}}"
+    http_handler_timeout: {{ .Values.settings.uploader.http_handler_timeout }}
+    max_excel_file_size_bytes: {{ .Values.settings.uploader.max_excel_file_size_bytes | int64 }}
+    auth_cookie_name: {{ .Values.settings.uploader.auth_cookie_name | quote }}
+
+    clusters: {{ .Values.settings.uploader.clusters | toYaml | nindent 4 }}
+  
+  exporter-config.yaml: |
+    cors: {{ .Values.settings.cors | toYaml | nindent 8 }}
+    http_addr: ":{{- .Values.settings.exporter.http_port -}}"
+    debug_http_addr: ":{{- .Values.settings.exporter.debug_http_port -}}"
+    http_handler_timeout: {{ .Values.settings.exporter.http_handler_timeout }}
+    max_excel_file_size_bytes: {{ .Values.settings.exporter.max_excel_file_size_bytes | int64 }}
+    auth_cookie_name: {{ .Values.settings.exporter.auth_cookie_name | quote }}
+
+    clusters: {{ .Values.settings.exporter.clusters | toYaml | nindent 4 }}
