@@ -60,7 +60,8 @@ spec:
               readOnly: true
               subPath: uploader-config.yaml
             - name: uploader-logs
-              mountPath: /tmp
+              mountPath: /logs
+              subPath: excel-uploader.log
       volumes:
         - configMap:
             defaultMode: 420

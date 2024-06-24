@@ -60,7 +60,8 @@ spec:
               readOnly: true
               subPath: exporter-config.yaml
             - name: exporter-logs
-              mountPath: /tmp
+              mountPath: /logs
+              subPath: excel-exporter.log
       volumes:
         - configMap:
             defaultMode: 420
