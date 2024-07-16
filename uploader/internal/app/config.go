@@ -9,7 +9,7 @@ import (
 
 const (
 	defaultHTTPHandlerTimeout = 2 * time.Minute
-	defaultMaxExcelFileSize   = 1024 * 1024 * 10
+	defaultMaxExcelFileSize   = 1024 * 1024 * 100
 
 	defaultAuthCookieName = "Session_id"
 )
