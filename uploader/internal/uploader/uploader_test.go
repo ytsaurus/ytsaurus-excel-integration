@@ -195,6 +195,47 @@ func TestMakeUploadRequest(t *testing.T) {
 	}
 }
 
+func TestEnsureSheetName(t *testing.T) {
+	t.Run("UserProvided", func(t *testing.T) {
+		// Sheet name provided by user.
+		r := &UploadRequest{Sheet: "Sheet1"}
+		r.EnsureSheetName()
+		require.Equal(t, "Sheet1", r.Sheet)
+	})
+
+	t.Run("MultipleSheets", func(t *testing.T) {
+		// Excel file with three sheets.
+		// Second one is active, but first one is selected for upload.
+		f := excelize.NewFile()
+		f.NewSheet("Sheet1")
+		i := f.NewSheet("Sheet2")
+		f.SetActiveSheet(i)
+		f.NewSheet("Sheet3")
+		require.Equal(t, 3, f.SheetCount)
+
+		r := &UploadRequest{Data: f}
+		r.EnsureSheetName()
+		require.Equal(t, "Sheet1", r.Sheet)
+	})
+
+	t.Run("HiddenSheet", func(t *testing.T) {
+		// Excel file with three sheets.
+		// First one is hidden, second one is chosen for upload.
+		f := excelize.NewFile()
+		f.NewSheet("Sheet1")
+		f.NewSheet("Sheet2")
+		i := f.NewSheet("Sheet3")
+		require.Equal(t, 3, f.SheetCount)
+		f.SetActiveSheet(i)
+		require.NoError(t, f.SetSheetVisible("Sheet1", false))
+		require.False(t, f.GetSheetVisible("Sheet1"))
+
+		r := &UploadRequest{Data: f}
+		r.EnsureSheetName()
+		require.Equal(t, "Sheet2", r.Sheet)
+	})
+}
+
 type S1 struct {
 	I64  int64  `yson:"i_64"`
 	UI64 uint64 `yson:"ui_64"`

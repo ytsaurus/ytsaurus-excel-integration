@@ -150,8 +150,11 @@ func (r *UploadRequest) EnsureSheetName() {
 		return
 	}
 
-	if sheets := r.Data.GetSheetList(); len(sheets) > 0 {
-		r.Sheet = sheets[0]
+	for _, sheet := range r.Data.GetSheetList() {
+		if r.Data.GetSheetVisible(sheet) {
+			r.Sheet = sheet
+			break
+		}
 	}
 }
 
