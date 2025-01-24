@@ -22,7 +22,7 @@ auth_cookie_name: ""
 # is used similarly to auth_cookie_name, but it is only
 # valid when the user is logged in using SSO instead of
 # their credentials.
-# Default: SSO_Token
+# Default: yt_oauth_access_token
 sso_cookie_name: ""
 
 # CORS settings.

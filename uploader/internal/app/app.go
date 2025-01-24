@@ -72,7 +72,7 @@ func (a *App) Run(ctx context.Context) error {
 		api := NewAPI(c, yc, a.l)
 		apiRouter := r.
 			With(ForwardCookie(a.conf.AuthCookieName)).
-			With(ForwardSSOCookie(a.conf.SSOCookieName, ssoCookieForwardedName)).
+			With(ForwardCookieRenamed(a.conf.SSOCookieName, ssoCookieForwardedName)).
 			With(ForwardUserTicket)
 
 		clusterMetrics := a.metrics.WithTags(map[string]string{"yt-cluster": c.Proxy})

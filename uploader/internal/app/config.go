@@ -12,7 +12,7 @@ const (
 	defaultMaxExcelFileSize   = 1024 * 1024 * 100
 
 	defaultAuthCookieName = "Session_id"
-	defaultSSOCookieName  = "SSO_Token"
+	defaultSSOCookieName  = "yt_oauth_access_token"
 )
 
 // Config is an app config.
