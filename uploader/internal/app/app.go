@@ -15,7 +15,10 @@ import (
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
 )
 
-const httpServerGracefulStopTimeout = 30 * time.Second
+const (
+	httpServerGracefulStopTimeout = 30 * time.Second
+	ssoCookieForwardedName        = "access_token"
+)
 
 // App is a god object that manages service lifetime.
 type App struct {
@@ -67,7 +70,11 @@ func (a *App) Run(ctx context.Context) error {
 		}
 
 		api := NewAPI(c, yc, a.l)
-		apiRouter := r.With(ForwardCookie(a.conf.AuthCookieName)).With(ForwardUserTicket)
+		apiRouter := r.
+			With(ForwardCookie(a.conf.AuthCookieName)).
+			With(ForwardSSOCookie(a.conf.SSOCookieName, ssoCookieForwardedName)).
+			With(ForwardUserTicket)
+
 		clusterMetrics := a.metrics.WithTags(map[string]string{"yt-cluster": c.Proxy})
 		api.RegisterMetrics(clusterMetrics)
 		apiRouter.Mount("/"+c.APIEndpointName+"/api", api.Routes())

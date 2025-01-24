@@ -12,6 +12,7 @@ const (
 	defaultMaxExcelFileSize   = 1024 * 1024 * 100
 
 	defaultAuthCookieName = "Session_id"
+	defaultSSOCookieName  = "SSO_Token"
 )
 
 // Config is an app config.
@@ -24,6 +25,7 @@ type Config struct {
 	// YT proxy uses this cookie to authorize requester.
 	// Session_id by default.
 	AuthCookieName string `yaml:"auth_cookie_name"`
+	SSOCookieName  string `yaml:"sso_cookie_name"`
 
 	CORS *CORSConfig `yaml:"cors"`
 
@@ -54,6 +56,10 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 
 	if c.AuthCookieName == "" {
 		c.AuthCookieName = defaultAuthCookieName
+	}
+
+	if c.SSOCookieName == "" {
+		c.SSOCookieName = defaultSSOCookieName
 	}
 
 	if len(c.Clusters) == 0 {

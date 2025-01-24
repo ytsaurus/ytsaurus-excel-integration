@@ -160,6 +160,21 @@ func ForwardCookie(name string) func(next http.Handler) http.Handler {
 	}
 }
 
+func ForwardSSOCookie(name string, as string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie(name)
+			if err == nil {
+				cookie.Name = as
+				ctx := yt.WithCredentials(r.Context(), cookieCredentials{cookie: cookie})
+				r = r.WithContext(ctx)
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // XYaUserTicket is an http header used for user ticket transfer.
 const XYaUserTicket = "X-Ya-User-Ticket"
 
