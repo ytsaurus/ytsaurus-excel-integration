@@ -29,7 +29,13 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          command: ["/usr/bin/excel-uploader", "-config", "/etc/config.yaml"]
+          command:
+            - "/usr/bin/excel-uploader"
+            - "-config"
+            - "/etc/config.yaml"
+            {{- with .Values.settings.logToStderr }}
+            - "-log-to-stderr"
+            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.uploader.repository }}:{{ .Values.image.uploader.tag | default .Chart.AppVersion }}"
@@ -59,9 +65,11 @@ spec:
               name: config
               readOnly: true
               subPath: uploader-config.yaml
+            {{- if not .Values.settings.logToStderr }}
             - name: uploader-logs
               mountPath: /logs
               subPath: excel-uploader.log
+            {{- end }}
       volumes:
         - configMap:
             defaultMode: 420
@@ -73,6 +81,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
+  {{- if not .Values.settings.logToStderr }}
   volumeClaimTemplates:
     - metadata:
         name: uploader-logs
@@ -81,3 +90,4 @@ spec:
         resources:
           requests:
             storage: 5Gi
+  {{- end }}

@@ -17,6 +17,9 @@ settings:
     allowed_hosts: []
     # Allowed hostname suffixes e.g. .myorigin.com, checked via HasSuffix(origin.Host, ".myorigin.com")
     allowed_host_suffixes: []
+
+  logToStderr: false
+
   exporter:
     # http_port: ":80"
     http_port: 80
@@ -36,6 +39,8 @@ settings:
     # Default: Session_id.
     # Reasonable value for OS installation: YTCypressCookie
     auth_cookie_name: "YTCypressCookie"
+
+    sso_cookie_name: "yt_oauth_access_token"
 
     # List of clusters with cluster-specific settings.
     clusters:
@@ -63,6 +68,8 @@ settings:
     # Default: Session_id.
     # Reasonable value for OS installation: YTCypressCookie
     auth_cookie_name: "YTCypressCookie"
+
+    sso_cookie_name: "yt_oauth_access_token"
 
     # List of clusters with cluster-specific settings.
     clusters:
