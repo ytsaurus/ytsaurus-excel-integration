@@ -13,6 +13,7 @@ data:
     http_handler_timeout: {{ .Values.settings.uploader.http_handler_timeout }}
     max_excel_file_size_bytes: {{ .Values.settings.uploader.max_excel_file_size_bytes | int64 }}
     auth_cookie_name: {{ .Values.settings.uploader.auth_cookie_name | quote }}
+    sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | quote }}
 
     clusters: {{ .Values.settings.uploader.clusters | toYaml | nindent 4 }}
   
@@ -23,5 +24,6 @@ data:
     http_handler_timeout: {{ .Values.settings.exporter.http_handler_timeout }}
     max_excel_file_size_bytes: {{ .Values.settings.exporter.max_excel_file_size_bytes | int64 }}
     auth_cookie_name: {{ .Values.settings.exporter.auth_cookie_name | quote }}
+    sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | quote }}
 
     clusters: {{ .Values.settings.exporter.clusters | toYaml | nindent 4 }}

@@ -18,6 +18,13 @@ max_excel_file_size_bytes: 104857600 # (100 MB)
 # Reasonable value for OS installation: YTCypressCookie
 auth_cookie_name: ""
 
+# Name of the cookie that contains SSO token. This cookie
+# is used similarly to auth_cookie_name, but it is only
+# valid when the user is logged in using SSO instead of
+# their credentials.
+# Default: yt_oauth_access_token
+sso_cookie_name: ""
+
 # CORS settings.
 cors:
   # Allowed hostnames e.g. myorigin.com, checked via exact match: origin.Host == "myorigin.com"

@@ -147,10 +147,15 @@ func (c cookieCredentials) SetExtension(req *rpc.TRequestHeader) {
 //
 // There will be no need in this action when tvm support is added to proxy (https://st.yandex-team.ru/YT-4570). // TODO
 func ForwardCookie(name string) func(next http.Handler) http.Handler {
+	return ForwardCookieRenamed(name, name)
+}
+
+func ForwardCookieRenamed(name string, as string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(name)
 			if err == nil {
+				cookie.Name = as
 				ctx := yt.WithCredentials(r.Context(), cookieCredentials{cookie: cookie})
 				r = r.WithContext(ctx)
 			}
