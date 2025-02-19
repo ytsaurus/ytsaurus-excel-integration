@@ -258,6 +258,9 @@ func (r *UploadRequest) String() string {
 // ErrBadRequest is an error that signals that the upload has failed due to bad request.
 var ErrBadRequest = xerrors.NewSentinel("bad request")
 
+// ErrUnauthorized is an error that signals that uploader is missing some permissions to make an upload.
+var ErrUnauthorized = xerrors.NewSentinel("unauthorized")
+
 // Upload executes given upload request.
 func Upload(ctx context.Context, yc yt.Client, req *UploadRequest) error {
 	req.EnsureSheetName()
@@ -279,6 +282,9 @@ func Upload(ctx context.Context, yc yt.Client, req *UploadRequest) error {
 		if yterrors.ContainsErrorCode(err, yterrors.CodeResolveError) {
 			return ErrBadRequest.Wrap(xerrors.Errorf("error reading schema for %q: %w", req.Path, err))
 		}
+		if yterrors.ContainsErrorCode(err, yterrors.CodeAuthorizationError) {
+			return ErrUnauthorized.Wrap(xerrors.Errorf("authorization error when reading table schema for %q: %w", req.Path, err))
+		}
 		return xerrors.Errorf("error reading schema for %q: %w", req.Path, err)
 	}
 
@@ -299,6 +305,9 @@ func Upload(ctx context.Context, yc yt.Client, req *UploadRequest) error {
 
 	out, err := tx.WriteTable(ctx, ypath.Rich{Path: req.Path, Append: &req.append}, nil)
 	if err != nil {
+		if yterrors.ContainsErrorCode(err, yterrors.CodeAuthorizationError) {
+			return ErrUnauthorized.Wrap(xerrors.Errorf("authorization error when creating table writer: %w", err))
+		}
 		return xerrors.Errorf("error creating writer: %w", err)
 	}
 
@@ -307,7 +316,11 @@ func Upload(ctx context.Context, yc yt.Client, req *UploadRequest) error {
 		return xerrors.Errorf("error uploading %s: %w", req, err)
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil && yterrors.ContainsErrorCode(err, yterrors.CodeAuthorizationError) {
+		return ErrUnauthorized.Wrap(err)
+	}
+	return err
 }
 
 func upload(req *UploadRequest, s *schema.Schema, out yt.TableWriter) error {
@@ -390,6 +403,9 @@ func CreateTable(ctx context.Context, yc yt.CypressClient, req *UploadRequest) e
 	}
 
 	_, err = yt.CreateTable(ctx, yc, req.Path, yt.WithSchema(*s))
+	if yterrors.ContainsErrorCode(err, yterrors.CodeAuthorizationError) {
+		return ErrUnauthorized.Wrap(xerrors.Errorf("authorization error when creating table: %w", err))
+	}
 	return err
 }
 

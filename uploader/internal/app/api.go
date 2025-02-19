@@ -173,6 +173,10 @@ func (a *API) uploadFile(w http.ResponseWriter, r *http.Request) {
 	req.Data = xlsx
 
 	if err := uploader.Upload(r.Context(), a.yc, req); err != nil {
+		if errors.Is(err, uploader.ErrUnauthorized) {
+			replyError(w, r, err, http.StatusUnauthorized)
+			return
+		}
 		if errors.Is(err, uploader.ErrBadRequest) {
 			replyError(w, r, err, http.StatusBadRequest)
 			return
