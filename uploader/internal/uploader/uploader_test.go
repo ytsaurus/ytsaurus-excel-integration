@@ -851,6 +851,7 @@ func TestGetColumnType(t *testing.T) {
 		{typeStr: "timestamp", expected: schema.TypeTimestamp},
 		{typeStr: "interval", expected: schema.TypeInterval},
 		{typeStr: "some-bad-type", expected: schema.Type("some-bad-type")}, // no error
+		{typeStr: " string ", expected: schema.TypeBytes},                  // whitespace is trimmed
 	} {
 		t.Run(tc.typeStr, func(t *testing.T) {
 			typ, err := GetColumnType(tc.typeStr)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -510,7 +511,8 @@ func MakeSchema(req *UploadRequest) (*schema.Schema, error) {
 
 func GetColumnType(typeStr string) (schema.Type, error) {
 	var t schema.Type
-	return t, t.UnmarshalText([]byte(typeStr))
+	normalized := strings.TrimSpace(typeStr)
+	return t, t.UnmarshalText([]byte(normalized))
 }
 
 // errOptionalField is an error returned by convert function
