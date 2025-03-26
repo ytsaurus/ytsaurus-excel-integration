@@ -28,7 +28,6 @@ jobs:
           core-fraction: 100
           disk-type: network-ssd-nonreplicated
           disk-size: 93GB
-          disable-update: true
           runner-home-dir: /actions-runner
 
   checkout:
