@@ -102,7 +102,7 @@ func (a *API) exportTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/vnd.ms-excel")
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", rsp.Filename))
 	_ = rsp.File.Write(w)
 }
