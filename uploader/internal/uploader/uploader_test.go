@@ -199,7 +199,7 @@ func TestEnsureSheetName(t *testing.T) {
 	t.Run("UserProvided", func(t *testing.T) {
 		// Sheet name provided by user.
 		r := &UploadRequest{Sheet: "Sheet1"}
-		r.EnsureSheetName()
+		_ = r.EnsureSheetName()
 		require.Equal(t, "Sheet1", r.Sheet)
 	})
 
@@ -207,14 +207,14 @@ func TestEnsureSheetName(t *testing.T) {
 		// Excel file with three sheets.
 		// Second one is active, but first one is selected for upload.
 		f := excelize.NewFile()
-		f.NewSheet("Sheet1")
-		i := f.NewSheet("Sheet2")
+		_, _ = f.NewSheet("Sheet1")
+		i, _ := f.NewSheet("Sheet2")
 		f.SetActiveSheet(i)
-		f.NewSheet("Sheet3")
+		_, _ = f.NewSheet("Sheet3")
 		require.Equal(t, 3, f.SheetCount)
 
 		r := &UploadRequest{Data: f}
-		r.EnsureSheetName()
+		_ = r.EnsureSheetName()
 		require.Equal(t, "Sheet1", r.Sheet)
 	})
 
@@ -222,16 +222,17 @@ func TestEnsureSheetName(t *testing.T) {
 		// Excel file with three sheets.
 		// First one is hidden, second one is chosen for upload.
 		f := excelize.NewFile()
-		f.NewSheet("Sheet1")
-		f.NewSheet("Sheet2")
-		i := f.NewSheet("Sheet3")
+		_, _ = f.NewSheet("Sheet1")
+		_, _ = f.NewSheet("Sheet2")
+		i, _ := f.NewSheet("Sheet3")
 		require.Equal(t, 3, f.SheetCount)
 		f.SetActiveSheet(i)
 		require.NoError(t, f.SetSheetVisible("Sheet1", false))
-		require.False(t, f.GetSheetVisible("Sheet1"))
+		ok, _ := f.GetSheetVisible("Sheet1")
+		require.False(t, ok)
 
 		r := &UploadRequest{Data: f}
-		r.EnsureSheetName()
+		_ = r.EnsureSheetName()
 		require.Equal(t, "Sheet2", r.Sheet)
 	})
 }

@@ -303,22 +303,26 @@ type CellStyles struct {
 }
 
 func registerCellStyles(f *excelize.File) (*CellStyles, error) {
-	numberFormat, err := f.NewStyle(`{"custom_number_format": "0"}`)
+	numberNumFmt := "0"
+	numberFormat, err := f.NewStyle(&excelize.Style{CustomNumFmt: &numberNumFmt})
 	if err != nil {
 		return nil, err
 	}
 
-	dateFormat, err := f.NewStyle(`{"custom_number_format": "yyyy-mm-dd"}`)
+	dateNumFmt := "yyyy-mm-dd"
+	dateFormat, err := f.NewStyle(&excelize.Style{CustomNumFmt: &dateNumFmt})
 	if err != nil {
 		return nil, err
 	}
 
-	datetimeFormat, err := f.NewStyle(`{"custom_number_format": "yyyy-mm-ddThh:mm:ssZ"}`)
+	datetimeNumFmt := "yyyy-mm-ddThh:mm:ssZ"
+	datetimeFormat, err := f.NewStyle(&excelize.Style{CustomNumFmt: &datetimeNumFmt})
 	if err != nil {
 		return nil, err
 	}
 
-	timestampFormat, err := f.NewStyle(`{"custom_number_format": "yyyy-mm-ddThh:mm:ss.000Z"}`)
+	timestampNumFmt := "yyyy-mm-ddThh:mm:ss.000Z"
+	timestampFormat, err := f.NewStyle(&excelize.Style{CustomNumFmt: &timestampNumFmt})
 	if err != nil {
 		return nil, err
 	}

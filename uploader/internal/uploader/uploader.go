@@ -146,17 +146,22 @@ func MakeUploadRequest(
 // Does nothing if r.Sheet is not empty.
 //
 // Uses the first sheet with not empty name.
-func (r *UploadRequest) EnsureSheetName() {
+func (r *UploadRequest) EnsureSheetName() error {
 	if r.Sheet != "" {
-		return
+		return nil
 	}
 
 	for _, sheet := range r.Data.GetSheetList() {
-		if r.Data.GetSheetVisible(sheet) {
+		ok, err := r.Data.GetSheetVisible(sheet)
+		if err != nil {
+			return err
+		}
+		if ok {
 			r.Sheet = sheet
 			break
 		}
 	}
+	return nil
 }
 
 // MakeColumnMapping creates column mapping.
@@ -263,7 +268,10 @@ var ErrUnauthorized = xerrors.NewSentinel("unauthorized")
 
 // Upload executes given upload request.
 func Upload(ctx context.Context, yc yt.Client, req *UploadRequest) error {
-	req.EnsureSheetName()
+	err := req.EnsureSheetName()
+	if err != nil {
+		return xerrors.Errorf("unable to ensure sheet name: %w", err)
+	}
 
 	tx, err := yc.BeginTx(ctx, nil)
 	if err != nil {
