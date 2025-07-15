@@ -17,4 +17,10 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y \
   strace \
   telnet \
   dnsutils \
-  iputils-ping
+  iputils-ping \
+  iperf \
+  iproute2 \
+  jq \
+  netcat-openbsd \
+  tcpdump \
+  wget
