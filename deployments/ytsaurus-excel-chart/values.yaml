@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   exporter:
-    repository: ghcr.io/ytsaurus/excel-uploader
+    repository: ghcr.io/ytsaurus/excel-exporter
     pullPolicy: IfNotPresent
     tag: "dev"
   uploader:
