@@ -4,11 +4,11 @@ image:
   exporter:
     repository: ghcr.io/ytsaurus/excel-exporter
     pullPolicy: IfNotPresent
-    tag: "dev"
+    tag: 0.0.0-alpha
   uploader:
     repository: ghcr.io/ytsaurus/excel-uploader
     pullPolicy: IfNotPresent
-    tag: "dev"
+    tag: 0.0.0-alpha
 
 
 settings:
@@ -18,7 +18,20 @@ settings:
     # Allowed hostname suffixes e.g. .myorigin.com, checked via HasSuffix(origin.Host, ".myorigin.com")
     allowed_host_suffixes: []
 
-  logToStderr: false
+  # List of clusters with cluster-specific settings.
+  clusters:
+    - proxy: http-proxies.default.svc.cluster.local
+      # Specifies proxy alias used in API endpoint path:
+      #   <http_addr>/<api_endpoint_name>/api/
+      # Default: equals to proxy.
+      api_endpoint_name: minisaurus
+
+  # Name of the request cookie that service forwards to YT.
+  # YT proxy uses this cookie to authorize requester.
+  # Default: Session_id.
+  # Reasonable value for OS installation: YTCypressCookie
+  auth_cookie_name: "YTCypressCookie"
+  sso_cookie_name: "yt_oauth_access_token"
 
   exporter:
     # http_port: ":80"
@@ -34,21 +47,10 @@ settings:
     # Default: 10485760 (10 Mb).
     max_excel_file_size_bytes: 104857600 # (100 MB)
 
-    # Name of the request cookie that service forwards to YT.
-    # YT proxy uses this cookie to authorize requester.
-    # Default: Session_id.
-    # Reasonable value for OS installation: YTCypressCookie
-    auth_cookie_name: "YTCypressCookie"
+    auth_cookie_name: null
+    sso_cookie_name: null
+    clusters: []
 
-    sso_cookie_name: "yt_oauth_access_token"
-
-    # List of clusters with cluster-specific settings.
-    clusters:
-      - proxy: hahn
-        # Specifies proxy alias used in API endpoint path:
-        #   <http_addr>/<api_endpoint_name>/api/
-        # Default: equals to proxy.
-        api_endpoint_name: hahn
   uploader:
      # http_port: ":80"
     http_port: 80
@@ -63,21 +65,9 @@ settings:
     # Default: 10485760 (10 Mb).
     max_excel_file_size_bytes: 104857600 # (100 MB)
 
-    # Name of the request cookie that service forwards to YT.
-    # YT proxy uses this cookie to authorize requester.
-    # Default: Session_id.
-    # Reasonable value for OS installation: YTCypressCookie
-    auth_cookie_name: "YTCypressCookie"
-
-    sso_cookie_name: "yt_oauth_access_token"
-
-    # List of clusters with cluster-specific settings.
-    clusters:
-      - proxy: hahn
-        # Specifies proxy alias used in API endpoint path:
-        #   <http_addr>/<api_endpoint_name>/api/
-        # Default: equals to proxy.
-        api_endpoint_name: hahn
+    auth_cookie_name: null
+    sso_cookie_name: null
+    clusters: []
 
 imagePullSecrets: []
 nameOverride: ""

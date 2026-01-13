@@ -33,7 +33,7 @@ Using the `--log-to-stderr` flag, you can force the service to write logs to std
 
 Example query:
 ```
-curl -g -v -X GET http://localhost:6029/hahn/api/export\
+curl -g -v -X GET http://localhost:6029/minisaurus/api/export\
 \?path=//home/someone/schematic-table\{"id","survey_id"\}\[%232:%234\]\
   --cookie 'Session_id=3:16'\
   --output /tmp/book.xlsx

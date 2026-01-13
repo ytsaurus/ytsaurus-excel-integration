@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: "ytsaurus-excel-exporter"
   labels:
@@ -33,9 +33,7 @@ spec:
             - "/usr/bin/excel-exporter"
             - "-config"
             - "/etc/config.yaml"
-            {{- with .Values.settings.logToStderr }}
             - "-log-to-stderr"
-            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.exporter.repository }}:{{ .Values.image.exporter.tag | default .Chart.AppVersion }}"
@@ -49,14 +47,14 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-            {{- with (first .Values.settings.exporter.clusters) }}
+            {{- with (first (.Values.settings.exporter.clusters | default .Values.settings.clusters)) }}
               path: /{{- .api_endpoint_name -}}/api/ready
             {{- end }}
               port: {{ .Values.settings.exporter.http_port }}
 
           readinessProbe:
             httpGet:
-            {{- with (first .Values.settings.exporter.clusters) }}
+            {{- with (first (.Values.settings.exporter.clusters | default .Values.settings.clusters)) }}
               path: /{{- .api_endpoint_name -}}/api/ready
             {{- end }}
               port: {{ .Values.settings.exporter.http_port }}
@@ -65,11 +63,6 @@ spec:
               name: config
               readOnly: true
               subPath: exporter-config.yaml
-            {{- if not .Values.settings.logToStderr }}
-            - name: exporter-logs
-              mountPath: /logs
-              subPath: excel-exporter.log
-            {{- end }}
       volumes:
         - configMap:
             defaultMode: 420
@@ -80,14 +73,3 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
-  {{- if not .Values.settings.logToStderr }}
-  volumeClaimTemplates:
-    - metadata:
-        name: exporter-logs
-      spec: 
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 5Gi
-  {{- end }}

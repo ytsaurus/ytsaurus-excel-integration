@@ -12,10 +12,10 @@ data:
     debug_http_addr: ":{{- .Values.settings.uploader.debug_http_port -}}"
     http_handler_timeout: {{ .Values.settings.uploader.http_handler_timeout }}
     max_excel_file_size_bytes: {{ .Values.settings.uploader.max_excel_file_size_bytes | int64 }}
-    auth_cookie_name: {{ .Values.settings.uploader.auth_cookie_name | quote }}
-    sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | quote }}
+    auth_cookie_name: {{ .Values.settings.uploader.auth_cookie_name | default .Values.settings.auth_cookie_name | quote }}
+    sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | default .Values.settings.sso_cookie_name | quote }}
 
-    clusters: {{ .Values.settings.uploader.clusters | toYaml | nindent 4 }}
+    clusters: {{ .Values.settings.uploader.clusters | default .Values.settings.clusters | toYaml | nindent 4 }}
   
   exporter-config.yaml: |
     cors: {{ .Values.settings.cors | toYaml | nindent 8 }}
@@ -23,7 +23,7 @@ data:
     debug_http_addr: ":{{- .Values.settings.exporter.debug_http_port -}}"
     http_handler_timeout: {{ .Values.settings.exporter.http_handler_timeout }}
     max_excel_file_size_bytes: {{ .Values.settings.exporter.max_excel_file_size_bytes | int64 }}
-    auth_cookie_name: {{ .Values.settings.exporter.auth_cookie_name | quote }}
-    sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | quote }}
+    auth_cookie_name: {{ .Values.settings.exporter.auth_cookie_name | default .Values.settings.auth_cookie_name | quote }}
+    sso_cookie_name: {{ .Values.settings.exporter.sso_cookie_name | default .Values.settings.sso_cookie_name | quote }}
 
-    clusters: {{ .Values.settings.exporter.clusters | toYaml | nindent 4 }}
+    clusters: {{ .Values.settings.exporter.clusters | default .Values.settings.clusters | toYaml | nindent 4 }}

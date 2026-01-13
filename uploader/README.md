@@ -33,7 +33,7 @@ Using the `--log-to-stderr` flag, you can force the service to write logs to std
 
 Example request:
 ```
-curl -g -v -F 'uploadfile=@/tmp/book.xlsx' http://localhost:6029/hahn/api/upload\?path\=//home/verytable/upload-tests/small-src\&append\=true\&columns\=%7B%22id%22%3A%22B%22%7D\&sheet\="Sheet1"\&start_row\=3\&row_count\=4 --cookie 'Session_id=3:1605443621...' -H 'X-CSRF-Token: fa6951d...'
+curl -g -v -F 'uploadfile=@/tmp/book.xlsx' http://localhost:6029/minisaurus/api/upload\?path\=//home/verytable/upload-tests/small-src\&append\=true\&columns\=%7B%22id%22%3A%22B%22%7D\&sheet\="Sheet1"\&start_row\=3\&row_count\=4 --cookie 'Session_id=3:1605443621...' -H 'X-CSRF-Token: fa6951d...'
 ```
 
 ## Monitoring

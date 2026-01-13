@@ -35,8 +35,8 @@ cors:
 
 # List of clusters with cluster-specific settings.
 clusters:
-  - proxy: hahn
+  - proxy: http-proxies.default.svc.cluster.local
     # Specifies proxy alias used in API endpoint path:
     #   <http_addr>/<api_endpoint_name>/api/
     # Default: equals to proxy.
-    api_endpoint_name: hahn
+    api_endpoint_name: minisaurus

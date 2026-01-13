@@ -1,13 +1,4 @@
-FROM mirror.gcr.io/ubuntu:noble
-
-USER root
-
-WORKDIR /tmp
-
-COPY ./excel-exporter /usr/bin/excel-exporter
-
-# CREDITS files with licenses for all binaries.
-COPY ./credits/excel-exporter.CREDITS /usr/bin/excel-exporter.CREDITS
+FROM ubuntu:24.04
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y \
   curl \
@@ -24,3 +15,8 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y \
   netcat-openbsd \
   tcpdump \
   wget
+
+USER root
+
+COPY ./excel-exporter /usr/bin/excel-exporter
+COPY ./credits/excel-exporter.CREDITS /usr/bin/excel-exporter.CREDITS
