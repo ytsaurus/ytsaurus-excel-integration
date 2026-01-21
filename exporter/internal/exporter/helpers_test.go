@@ -48,11 +48,9 @@ func TestLimitedWriter(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			row := make([]any, len(tc.values))
+			row := make(map[int]excelize.Cell)
 			for i, v := range tc.values {
-				if v == nil {
-					row[i] = nil
-				} else {
+				if v != nil {
 					row[i] = excelize.Cell{Value: v}
 				}
 			}

@@ -168,12 +168,13 @@ func TestExportFile(t *testing.T) {
 	defer cancel()
 
 	for _, tc := range []struct {
-		name   string
-		schema schema.Schema
-		rows   []any
-		req    *ExportRequest
-		opts   *ExportOptions
-		error  bool
+		name     string
+		schema   schema.Schema
+		rows     []any
+		req      *ExportRequest
+		opts     *ExportOptions
+		error    bool
+		expected [][]string
 	}{
 		{
 			name:   "types",
@@ -195,11 +196,8 @@ func TestExportFile(t *testing.T) {
 				&S1{Bool: true},
 				&S1{Bool: false},
 				&S1{Bool: true},
-				&S1{Date: NewDate(time.Now())},
 				&S1{Date: NewDate(time.Date(2000, time.December, 12, 10, 22, 17, 0, time.UTC))},
-				&S1{Datetime: NewDatetime(time.Now())},
 				&S1{Datetime: NewDatetime(time.Date(2000, time.December, 12, 10, 22, 17, 0, time.UTC))},
-				&S1{Timestamp: NewTimestamp(time.Now())},
 				&S1{Timestamp: NewTimestamp(time.Date(2000, time.December, 12, 10, 22, 17, 302000000, time.UTC))},
 				&S1{Timestamp: NewTimestamp(time.Date(2000, time.December, 12, 10, 22, 17, 302001001, time.UTC))},
 				&S1{Interval: NewInterval(time.Hour + time.Minute*32)},
@@ -218,6 +216,35 @@ func TestExportFile(t *testing.T) {
 				StartRow: 0,
 				RowCount: MaxRowCount,
 			},
+			expected: [][]string{
+				{"i_16", "ui_16", "i_32", "ui_32", "i_64", "ui_64", "float", "double", "bool", "string", "date", "datetime", "timestamp", "interval", "any"},
+				{"int16", "uint16", "int32", "uint32", "int64", "uint64", "float", "double", "boolean", "utf8", "date", "datetime", "timestamp", "interval", "any"},
+				{"-16", "16", "-32", "32", "-64", "64", "32.5", "42.5", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"-160", "160", "-320", "320", "-640", "640", "325", "425", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"-16", "16", "-32", "32", "-64", "64", "32.5", "42.50000005", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "4291747199999999", "4291747199999999", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "4291747200000000", "4291747200000000", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "4", "4", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0.0010000000000000002", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "1.6E-19", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "abacaba", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "123", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "{" + strings.Repeat("a", maxExcelStrLen-2) + "}", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "{" + strings.Repeat("a", maxExcelStrLen-1), "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "TRUE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "TRUE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "2000-12-12", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "2000-12-12T10:22:17Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "2000-12-12T10:22:17.000Z", "0"}, // must be 2000-12-12T10:22:17.302Z
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "2000-12-12T10:22:17.302001Z", "0"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "5520000000"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "4291747199999999"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0", "[1;2;3;]"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0", "str"},
+				{"0", "0", "0", "0", "0", "0", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0", "{age=12;name=tst;}"},
+			},
 		},
 		{
 			name:   "all-columns",
@@ -230,6 +257,12 @@ func TestExportFile(t *testing.T) {
 				Path:     ypath.Path("//tmp/all-columns"),
 				StartRow: 0,
 				RowCount: MaxRowCount,
+			},
+			expected: [][]string{
+				{"i_16", "ui_16", "i_32", "ui_32", "i_64", "ui_64", "float", "double", "bool", "string", "date", "datetime", "timestamp", "interval", "any"},
+				{"int16", "uint16", "int32", "uint32", "int64", "uint64", "float", "double", "boolean", "utf8", "date", "datetime", "timestamp", "interval", "any"},
+				{"0", "0", "0", "0", "1", "1", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
+				{"0", "0", "0", "0", "2", "2", "0", "0", "FALSE", "", "1970-01-01", "1970-01-01T00:00:00Z", "1970-01-01T00:00:00.000Z", "0"},
 			},
 		},
 		{
@@ -245,6 +278,13 @@ func TestExportFile(t *testing.T) {
 				Columns:  []string{"comment", "bytes"},
 				StartRow: 0,
 				RowCount: MaxRowCount,
+			},
+			expected: [][]string{
+				{"comment", "bytes"},
+				{"utf8", "string"},
+				{"unprintable bytes", "\x01\x02\x03\x04\x05\x06\x07\x08"},
+				{"stripped", string(append(bytes.Repeat([]byte{'b'}, maxExcelStrLen-1), '}'))},
+				{"not stripped", string(bytes.Repeat([]byte{'b'}, maxExcelStrLen))},
 			},
 		},
 		{
@@ -263,11 +303,33 @@ func TestExportFile(t *testing.T) {
 			opts:  &ExportOptions{MaxExcelFileSize: 31}, // 31 < 8 * 4
 			error: true,
 		},
+		{
+			name: "schemaless",
+			rows: []any{
+				map[string]any{"c": 1, "a": 2},
+				map[string]any{"d": 3, "b": 4},
+			},
+			req: &ExportRequest{
+				Path:     ypath.Path("//tmp/schemaless"),
+				StartRow: 0,
+				RowCount: MaxRowCount,
+			},
+			expected: [][]string{
+				{"a", "c", "b", "d"},
+				{"2", "1"},
+				{"", "", "4", "3"},
+			},
+		},
 	} {
 		t.Run(tc.req.String(), func(t *testing.T) {
 			tc.req.NumberPrecisionMode = NumberPrecisionModeString
 
-			_, err := yt.CreateTable(env.Ctx, env.YT, tc.req.Path, yt.WithSchema(tc.schema))
+			var opts []yt.CreateTableOption
+			if len(tc.schema.Columns) > 0 {
+				opts = append(opts, yt.WithSchema(tc.schema))
+			}
+
+			_, err := yt.CreateTable(env.Ctx, env.YT, tc.req.Path, opts...)
 			require.NoError(t, err)
 
 			writer, err := env.YT.WriteTable(env.Ctx, tc.req.Path, nil)
@@ -294,6 +356,10 @@ func TestExportFile(t *testing.T) {
 				require.NoError(t, err)
 				t.Logf("Saving excel file to %q", outFilename)
 				require.NoError(t, f.File.Write(outFile))
+
+				rows, err := f.File.GetRows(SheetName)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, rows)
 			} else {
 				require.Error(t, err)
 			}

@@ -233,6 +233,108 @@ func TestConverter(t *testing.T) {
 	}
 }
 
+func TestConvertAuto(t *testing.T) {
+	styles := &CellStyles{Number: 1, Date: 2, Datetime: 3, Timestamp: 4}
+
+	c := converter{styles: styles}
+
+	for _, tc := range []struct {
+		name string
+		in   any
+		cell excelize.Cell
+	}{
+		{
+			name: "int16",
+			in:   int16(-16),
+			cell: excelize.Cell{StyleID: styles.Number, Value: int16(-16)},
+		},
+		{
+			name: "uint16",
+			in:   uint16(16),
+			cell: excelize.Cell{StyleID: styles.Number, Value: uint16(16)},
+		}, {
+			name: "int32",
+			in:   int32(-32),
+			cell: excelize.Cell{StyleID: styles.Number, Value: int32(-32)},
+		},
+		{
+			name: "uint32",
+			in:   uint32(32),
+			cell: excelize.Cell{StyleID: styles.Number, Value: uint32(32)},
+		},
+		{
+			name: "small-int64",
+			in:   int64(-64),
+			cell: excelize.Cell{StyleID: styles.Number, Value: int64(-64)},
+		},
+		{
+			name: "small-uint64",
+			in:   uint64(64),
+			cell: excelize.Cell{StyleID: styles.Number, Value: uint64(64)},
+		},
+		{
+			name: "large-int64",
+			in:   int64(-4291747199999999),
+			cell: excelize.Cell{Value: "-4291747199999999"},
+		},
+		{
+			name: "large-uint64",
+			in:   uint64(4291747199999999),
+			cell: excelize.Cell{Value: "4291747199999999"},
+		},
+		{
+			name: "small-precision-float",
+			in:   float32(0.00016),
+			cell: excelize.Cell{Value: float32(0.00016)},
+		},
+		{
+			name: "small-precision-double",
+			in:   0.000000000000000016,
+			cell: excelize.Cell{Value: 0.000000000000000016},
+		},
+		{
+			name: "large-precision-double",
+			in:   0.001000000000000016,
+			cell: excelize.Cell{Value: "0.001000000000000016"},
+		},
+		{
+			name: "bool",
+			in:   true,
+			cell: excelize.Cell{Value: true},
+		},
+		{
+			name: "small-string",
+			in:   "hello",
+			cell: excelize.Cell{Value: "hello"},
+		},
+		{
+			name: "large-string",
+			in:   strings.Repeat("a", maxExcelStrLen+1),
+			cell: excelize.Cell{Value: strings.Repeat("a", maxExcelStrLen)},
+		},
+		{
+			name: "any-struct",
+			in: struct {
+				Age int
+			}{Age: 52},
+			cell: excelize.Cell{Value: []byte("{Age=52;}")},
+		},
+		{
+			name: "any-raw-yson",
+			in:   yson.RawValue("{Name=var;}"),
+			cell: excelize.Cell{Value: []byte("{Name=var;}")},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c.numberPrecisionMode = NumberPrecisionModeString
+			cell, err := c.convertAuto(tc.in)
+
+			require.NoError(t, err)
+			require.Equal(t, tc.cell, cell)
+		})
+	}
+}
+
 func TestConverterError(t *testing.T) {
 	c := converter{numberPrecisionMode: NumberPrecisionModeError}
 

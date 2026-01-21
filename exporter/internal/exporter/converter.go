@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -160,6 +161,29 @@ func (c *converter) convert(t schema.Type, v any) (excelize.Cell, error) {
 	}
 }
 
+func (c *converter) convertAuto(v any) (excelize.Cell, error) {
+	switch val := v.(type) {
+	case nil:
+		return excelize.Cell{}, nil
+	case string:
+		return c.convertString(val)
+	case []byte:
+		return c.convertBytes(string(val))
+	case int, int8, int16, int32, uint, uint8, uint16, uint32:
+		return c.convertSmallIntegers(val)
+	case int64, uint64:
+		return c.convertLargeIntegers(val)
+	case float32, float64:
+		return c.convertFloat(val)
+	case bool:
+		return c.convertBool(val)
+	case any:
+		return c.convertAny(val)
+	default:
+		return excelize.Cell{Value: "UNSUPPORTED"}, nil
+	}
+}
+
 // Column is a schema.Column with additional index excel field.
 type Column struct {
 	Index int
@@ -176,9 +200,48 @@ type ConvertOptions struct {
 func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 	out := excelize.NewFile()
 
-	nameToCol := makeHeader(opts.Columns, opts.Schema)
-	if err := writeHeader(nameToCol, out); err != nil {
-		return nil, err
+	hasSchema := opts.Schema != nil && len(opts.Schema.Columns) > 0
+
+	var nameToCol map[string]*Column
+	var nextColIndex int
+
+	if hasSchema {
+		nameToCol = makeHeader(opts.Columns, opts.Schema)
+		if err := writeHeader(nameToCol, out); err != nil {
+			return nil, err
+		}
+		for _, col := range nameToCol {
+			if col.Index >= nextColIndex {
+				nextColIndex = col.Index + 1
+			}
+		}
+	} else {
+		nameToCol = map[string]*Column{}
+		nextColIndex = 1
+	}
+
+	updateHeaders := func(row map[string]any) error {
+		var newKeys []string
+
+		for k := range row {
+			if _, ok := nameToCol[k]; !ok {
+				newKeys = append(newKeys, k)
+			}
+		}
+
+		slices.Sort(newKeys)
+
+		for _, k := range newKeys {
+			col := &Column{Index: nextColIndex}
+			nameToCol[k] = col
+
+			axis, _ := excelize.CoordinatesToCellName(col.Index, 1)
+			if err := out.SetCellValue(SheetName, axis, k); err != nil {
+				return err
+			}
+			nextColIndex++
+		}
+		return nil
 	}
 
 	styles, err := registerCellStyles(out)
@@ -188,9 +251,19 @@ func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 
 	c := &converter{styles: styles, numberPrecisionMode: opts.NumberPrecisionMode}
 
-	totalRowWeight := 0
+	convert := func(col *Column, v any) (excelize.Cell, error) {
+		if hasSchema {
+			return c.convert(col.Type, v)
+		}
+		return c.convertAuto(v)
+	}
 
-	excelRowNumber := 3
+	totalRowWeight := 0
+	excelRowNumber := 2
+	if hasSchema {
+		excelRowNumber++
+	}
+
 	for r.Next() {
 		var row map[string]any
 		err = r.Scan(&row)
@@ -198,32 +271,37 @@ func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 			return nil, xerrors.Errorf("error reading table row: %w", err)
 		}
 
-		excelRow := make([]any, len(row))
+		if !hasSchema {
+			if err := updateHeaders(row); err != nil {
+				return nil, err
+			}
+		}
+
+		excelRow := make(map[int]excelize.Cell)
 		for k, v := range row {
+			if v == nil {
+				continue
+			}
+
 			col, ok := nameToCol[k]
 			if !ok {
 				return nil, xerrors.Errorf("unable to find column %s in schema %+v", k, nameToCol)
 			}
 
-			if v == nil {
-				excelRow[col.Index-1] = nil
-				continue
-			}
-
-			cell, err := c.convert(col.Type, v)
+			cell, err := convert(col, v)
 			if err != nil {
-				return nil, fmt.Errorf("error converting value from column %s and row %d: %w", k, excelRowNumber-3, err)
+				errRowIndex := excelRowNumber - 1
+				if hasSchema {
+					errRowIndex = excelRowNumber - 3
+				}
+				return nil, fmt.Errorf("error converting value from column %s and row %d: %w", k, errRowIndex, err)
 			}
 
-			excelRow[col.Index-1] = cell
+			excelRow[col.Index] = cell
 		}
 
-		for i, v := range excelRow {
-			if v == nil {
-				continue
-			}
-			cell := v.(excelize.Cell)
-			axis, _ := excelize.CoordinatesToCellName(i+1, excelRowNumber)
+		for i, cell := range excelRow {
+			axis, _ := excelize.CoordinatesToCellName(i, excelRowNumber)
 			if err := out.SetCellStyle(SheetName, axis, axis, cell.StyleID); err != nil {
 				return nil, err
 			}

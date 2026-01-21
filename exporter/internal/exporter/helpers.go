@@ -15,13 +15,9 @@ import (
 // boolean — 1 byte;
 // string — it's length;
 // nil — 0 bytes.
-func rowWeight(row []any) int {
+func rowWeight(row map[int]excelize.Cell) int {
 	weight := 0
-	for _, v := range row {
-		if v == nil {
-			continue
-		}
-		cell := v.(excelize.Cell)
+	for _, cell := range row {
 		switch t := cell.Value.(type) {
 		case int8, uint8, int16, uint16, int, uint, int32, uint32, int64, uint64, float64:
 			weight += 8
