@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -21,6 +22,7 @@ type Config struct {
 	DebugHTTPAddr      string        `yaml:"debug_http_addr"`
 	HTTPHandlerTimeout time.Duration `yaml:"http_handler_timeout"`
 	MaxExcelFileSize   int           `yaml:"max_excel_file_size_bytes"`
+	APIPathPrefix      string        `yaml:"api_path_prefix"`
 	// AuthCookieName is a request cookie that service forwards to YT.
 	// YT proxy uses this cookie to authorize requester.
 	// Session_id by default.
@@ -78,6 +80,8 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		conf.maxExcelFileSize = c.MaxExcelFileSize
 	}
 	c.clustersByProxy = byProxy
+
+	c.APIPathPrefix = strings.Trim(c.APIPathPrefix, "/")
 
 	return nil
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"path"
 	"sync"
 	"time"
 
@@ -77,7 +78,7 @@ func (a *App) Run(ctx context.Context) error {
 
 		clusterMetrics := a.metrics.WithTags(map[string]string{"yt-cluster": c.Proxy})
 		api.RegisterMetrics(clusterMetrics)
-		apiRouter.Mount("/"+c.APIEndpointName+"/api", api.Routes())
+		apiRouter.Mount(path.Join("/", a.conf.APIPathPrefix, c.APIEndpointName, "api"), api.Routes())
 		api.SetReady()
 	}
 

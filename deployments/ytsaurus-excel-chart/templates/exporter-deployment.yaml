@@ -47,15 +47,17 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
+            {{- $apiPrefix := .Values.settings.exporter.api_path_prefix | default "" | trimAll "/" }}
             {{- with (first (.Values.settings.exporter.clusters | default .Values.settings.clusters)) }}
-              path: /{{- .api_endpoint_name -}}/api/ready
+              path: {{ if $apiPrefix }}/{{ $apiPrefix }}{{ end }}/{{- .api_endpoint_name -}}/api/ready
             {{- end }}
               port: {{ .Values.settings.exporter.http_port }}
 
           readinessProbe:
             httpGet:
+            {{- $apiPrefix := .Values.settings.exporter.api_path_prefix | default "" | trimAll "/" }}
             {{- with (first (.Values.settings.exporter.clusters | default .Values.settings.clusters)) }}
-              path: /{{- .api_endpoint_name -}}/api/ready
+              path: {{ if $apiPrefix }}/{{ $apiPrefix }}{{ end }}/{{- .api_endpoint_name -}}/api/ready
             {{- end }}
               port: {{ .Values.settings.exporter.http_port }}
           volumeMounts:

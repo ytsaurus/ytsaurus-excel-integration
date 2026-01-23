@@ -22,7 +22,7 @@ settings:
   clusters:
     - proxy: http-proxies.default.svc.cluster.local
       # Specifies proxy alias used in API endpoint path:
-      #   <http_addr>/<api_endpoint_name>/api/
+      #   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
       # Default: equals to proxy.
       api_endpoint_name: minisaurus
 
@@ -47,6 +47,11 @@ settings:
     # Default: 10485760 (10 Mb).
     max_excel_file_size_bytes: 104857600 # (100 MB)
 
+    # Specifies global path prefix used in API endpoint path:
+    #   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
+    # Default: empty.
+    api_path_prefix: ""
+
     auth_cookie_name: null
     sso_cookie_name: null
     clusters: []
@@ -64,6 +69,11 @@ settings:
     # Max input file size.
     # Default: 10485760 (10 Mb).
     max_excel_file_size_bytes: 104857600 # (100 MB)
+
+    # Specifies global path prefix used in API endpoint path:
+    #   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
+    # Default: empty.
+    api_path_prefix: ""
 
     auth_cookie_name: null
     sso_cookie_name: null

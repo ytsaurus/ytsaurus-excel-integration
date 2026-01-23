@@ -25,6 +25,10 @@ auth_cookie_name: ""
 # Default: yt_oauth_access_token
 sso_cookie_name: ""
 
+# Specifies global path prefix used in API endpoint path:
+#   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
+# Default: empty.
+api_path_prefix: ""
 
 # CORS settings.
 cors:
@@ -37,6 +41,6 @@ cors:
 clusters:
   - proxy: http-proxies.default.svc.cluster.local
     # Specifies proxy alias used in API endpoint path:
-    #   <http_addr>/<api_endpoint_name>/api/
+    #   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
     # Default: equals to proxy.
     api_endpoint_name: minisaurus
