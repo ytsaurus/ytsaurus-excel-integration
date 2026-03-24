@@ -161,10 +161,22 @@ func TestConverter(t *testing.T) {
 			cell:    excelize.Cell{Value: "hello"},
 		},
 		{
+			name:    "small-string-utf8",
+			colType: schema.TypeString,
+			in:      "привет",
+			cell:    excelize.Cell{Value: "привет"},
+		},
+		{
 			name:    "large-string",
 			colType: schema.TypeString,
 			in:      strings.Repeat("a", maxExcelStrLen+1),
 			cell:    excelize.Cell{Value: strings.Repeat("a", maxExcelStrLen)},
+		},
+		{
+			name:    "large-string-utf8",
+			colType: schema.TypeString,
+			in:      strings.Repeat("ы", maxExcelStrLen+1),
+			cell:    excelize.Cell{Value: strings.Repeat("ы", maxExcelStrLen)},
 		},
 		{
 			name:    "date",
@@ -221,6 +233,12 @@ func TestConverter(t *testing.T) {
 			colType: schema.TypeAny,
 			in:      strings.Repeat("a", maxExcelStrLen+1),
 			cell:    excelize.Cell{Value: []byte(strings.Repeat("a", maxExcelStrLen))},
+		},
+		{
+			name:    "any-large-string-utf8",
+			colType: schema.TypeAny,
+			in:      strings.Repeat("ы", maxExcelStrLen+1),
+			cell:    excelize.Cell{Value: []byte(`"` + strings.Repeat("ы", maxExcelStrLen-1))},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -308,9 +326,19 @@ func TestConvertAuto(t *testing.T) {
 			cell: excelize.Cell{Value: "hello"},
 		},
 		{
+			name: "small-string-utf8",
+			in:   "привет",
+			cell: excelize.Cell{Value: "привет"},
+		},
+		{
 			name: "large-string",
 			in:   strings.Repeat("a", maxExcelStrLen+1),
 			cell: excelize.Cell{Value: strings.Repeat("a", maxExcelStrLen)},
+		},
+		{
+			name: "large-string-utf8",
+			in:   strings.Repeat("ы", maxExcelStrLen+1),
+			cell: excelize.Cell{Value: strings.Repeat("ы", maxExcelStrLen)},
 		},
 		{
 			name: "any-struct",

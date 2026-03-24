@@ -36,8 +36,8 @@ type converter struct {
 
 func (c *converter) convertBytes(v any) (excelize.Cell, error) {
 	data := v.(string)
-	if len(data) > maxExcelStrLen {
-		data = data[:maxExcelStrLen]
+	if runes := []rune(data); len(runes) > maxExcelStrLen {
+		data = string(runes[:maxExcelStrLen])
 	}
 	return excelize.Cell{Value: data}, nil
 }
@@ -92,8 +92,8 @@ func (c *converter) convertAny(v any) (excelize.Cell, error) {
 		return excelize.Cell{}, xerrors.Errorf("error converting %s to yson: %w", v, err)
 	}
 
-	if len(data) > maxExcelStrLen {
-		data = data[:maxExcelStrLen]
+	if runes := []rune(string(data)); len(runes) > maxExcelStrLen {
+		data = []byte(string(runes[:maxExcelStrLen]))
 	}
 
 	return excelize.Cell{Value: data}, nil
