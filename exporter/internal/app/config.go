@@ -100,6 +100,8 @@ type ClusterConfig struct {
 	//
 	// Equals to Proxy by default.
 	APIEndpointName string `yaml:"api_endpoint_name"`
+	// UseTLS enables TLS for connections to this cluster.
+	UseTLS bool `yaml:"use_tls"`
 
 	maxExcelFileSize int
 }
