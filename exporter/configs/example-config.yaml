@@ -44,3 +44,4 @@ clusters:
     #   <http_addr>/<api_path_prefix>/<api_endpoint_name>/api/
     # Default: equals to proxy.
     api_endpoint_name: minisaurus
+    use_tls: false
