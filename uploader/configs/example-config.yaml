@@ -30,6 +30,17 @@ sso_cookie_name: ""
 # Default: empty.
 api_path_prefix: ""
 
+# Audit event logging. Each upload is recorded as a JSON line.
+# The delivery daemon reads these files and pushes to the YT queue with schema:
+#   trace_id (string), span_id (string), parent_span_id (string),
+#   event_type (string), event_info (any).
+# events:
+#   enabled: false        # disabled by default; set to true to enable
+#   log_pattern: /var/log/excel-uploader/events.%Y%m%d%H%M  # required when enabled
+#   link_name: /var/log/excel-uploader/events.log
+#   rotation_time: 15m   # default
+#   max_age: 168h        # 7 days default
+
 # CORS settings.
 cors:
   # Allowed hostnames e.g. myorigin.com, checked via exact match: origin.Host == "myorigin.com"

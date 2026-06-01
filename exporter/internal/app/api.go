@@ -18,21 +18,22 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/microservices/excel/exporter/internal/exporter"
+	"go.ytsaurus.tech/yt/microservices/excel/pkg/events"
 )
 
 // API provides http endpoints to interact with the service.
 type API struct {
 	conf *ClusterConfig
 	yc   yt.Client
-
-	l log.Structured
+	l    log.Structured
+	ew   events.Writer
 
 	ready atomic.Bool
 }
 
 // NewAPI creates new API.
-func NewAPI(c *ClusterConfig, yc yt.Client, l log.Structured) *API {
-	return &API{conf: c, yc: yc, l: l}
+func NewAPI(c *ClusterConfig, yc yt.Client, l log.Structured, ew events.Writer) *API {
+	return &API{conf: c, yc: yc, l: l, ew: ew}
 }
 
 func (a *API) Routes() chi.Router {
@@ -91,9 +92,20 @@ func (a *API) exportTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	info := &events.ExportTableInfo{
+		Cluster:  a.conf.Proxy,
+		YTPath:   string(req.Path),
+		Columns:  req.Columns,
+		StartRow: req.StartRow,
+		RowCount: req.RowCount,
+	}
+	a.ew.Write(r.Context(), events.EventExportTableStarted, info)
+
 	opts := &exporter.ExportOptions{MaxExcelFileSize: a.conf.maxExcelFileSize}
 	rsp, err := exporter.Export(r.Context(), a.yc, req, opts)
 	if err != nil {
+		info.Error = err.Error()
+		a.ew.Write(r.Context(), events.EventExportTableFailed, info)
 		if errors.Is(err, exporter.ErrBadRequest) {
 			replyError(w, r, err, http.StatusBadRequest)
 			return
@@ -101,6 +113,10 @@ func (a *API) exportTable(w http.ResponseWriter, r *http.Request) {
 		replyError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	info.Filename = rsp.Filename
+	info.Columns = req.Columns
+	a.ew.Write(r.Context(), events.EventExportTableSucceeded, info)
 
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", rsp.Filename))
@@ -231,9 +247,19 @@ func (a *API) exportQueryResult(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	info := &events.ExportQueryResultInfo{
+		Cluster:     a.conf.Proxy,
+		QueryID:     req.ID.String(),
+		ResultIndex: req.Index,
+		Columns:     req.Columns,
+	}
+	a.ew.Write(r.Context(), events.EventExportQueryResultStarted, info)
+
 	opts := &exporter.ExportOptions{MaxExcelFileSize: a.conf.maxExcelFileSize}
 	rsp, err := exporter.ExportQueryResult(r.Context(), a.yc, req, opts)
 	if err != nil {
+		info.Error = err.Error()
+		a.ew.Write(r.Context(), events.EventExportQueryResultFailed, info)
 		if errors.Is(err, exporter.ErrBadRequest) {
 			replyError(w, r, err, http.StatusBadRequest)
 			return
@@ -241,6 +267,9 @@ func (a *API) exportQueryResult(w http.ResponseWriter, r *http.Request) {
 		replyError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	info.Filename = rsp.Filename
+	a.ew.Write(r.Context(), events.EventExportQueryResultSucceeded, info)
 
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", rsp.Filename))

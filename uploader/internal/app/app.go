@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"path"
 	"sync"
@@ -14,6 +15,7 @@ import (
 	"go.ytsaurus.tech/library/go/httputil/middleware/httpmetrics"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
+	"go.ytsaurus.tech/yt/microservices/excel/pkg/events"
 )
 
 const (
@@ -60,6 +62,26 @@ func (a *App) Run(ctx context.Context) error {
 	r.Use(requestLog(a.l, int64(a.conf.MaxExcelFileSize)))
 	r.Use(CORS(a.conf.CORS))
 
+	var ew events.Writer = events.NoOpWriter{}
+	if ec := a.conf.Events; ec != nil && ec.Enabled {
+		if ec.LogPattern == "" {
+			return fmt.Errorf("events.log_pattern is required when events.enabled is true")
+		}
+		rotationTime := ec.RotationTime
+		if rotationTime == 0 {
+			rotationTime = 15 * time.Minute
+		}
+		maxAge := ec.MaxAge
+		if maxAge == 0 {
+			maxAge = 7 * 24 * time.Hour
+		}
+		fw, err := events.NewFileWriter(ec.LogPattern, ec.LinkName, rotationTime, maxAge, a.l)
+		if err != nil {
+			return fmt.Errorf("creating event writer: %w", err)
+		}
+		ew = fw
+	}
+
 	for _, c := range a.conf.Clusters {
 		l := log.With(a.l.Logger(), log.String("cluster", c.Proxy)).Structured()
 		yc, err := ythttp.NewClient(&yt.Config{
@@ -71,7 +93,7 @@ func (a *App) Run(ctx context.Context) error {
 			return err
 		}
 
-		api := NewAPI(c, yc, a.l)
+		api := NewAPI(c, yc, a.l, ew)
 		apiRouter := r.
 			With(ForwardCookie(a.conf.AuthCookieName)).
 			With(ForwardCookieRenamed(a.conf.SSOCookieName, ssoCookieForwardedName)).

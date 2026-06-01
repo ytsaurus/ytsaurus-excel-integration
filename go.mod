@@ -7,7 +7,7 @@ require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/golang/protobuf v1.5.4
 	github.com/rs/cors v1.11.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/xuri/excelize/v2 v2.9.1
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.27.0
@@ -50,6 +50,8 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible // indirect
+	github.com/lestrrat-go/strftime v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20220913051719-115f729f3c8c // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect

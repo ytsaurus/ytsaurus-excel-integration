@@ -21,6 +21,7 @@ import (
 	"go.ytsaurus.tech/yt/go/proto/core/rpc"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yterrors"
+	"go.ytsaurus.tech/yt/microservices/excel/pkg/events"
 )
 
 const (
@@ -81,6 +82,7 @@ func requestLog(l log.Structured, bodySizeLimit int64) func(next http.Handler) h
 
 			ctx := ctxlog.WithFields(r.Context(), requestIDField)
 			ctx = withRequestID(ctx, requestID)
+			ctx = events.WithTraceContext(ctx, requestID.String(), r.Header.Get(xReqIDHTTPHeader))
 			next.ServeHTTP(ww, r.WithContext(ctx))
 		})
 	}

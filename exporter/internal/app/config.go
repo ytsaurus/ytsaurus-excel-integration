@@ -8,6 +8,22 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// EventsConfig configures audit event logging.
+type EventsConfig struct {
+	// Enabled turns event logging on. False by default.
+	Enabled bool `yaml:"enabled"`
+	// LogPattern is a strftime pattern for rotated log files,
+	// e.g. /var/log/excel-exporter/events.%Y%m%d%H%M.
+	// Required when enabled is true.
+	LogPattern string `yaml:"log_pattern"`
+	// LinkName is the path to the symlink pointing to the current log file.
+	LinkName string `yaml:"link_name"`
+	// RotationTime controls how often to rotate. Defaults to 15 minutes.
+	RotationTime time.Duration `yaml:"rotation_time"`
+	// MaxAge is how long to keep old log files. Defaults to 7 days.
+	MaxAge time.Duration `yaml:"max_age"`
+}
+
 const (
 	defaultHTTPHandlerTimeout = 2 * time.Minute
 	defaultMaxExcelFileSize   = 1024 * 1024 * 100
@@ -30,6 +46,8 @@ type Config struct {
 	SSOCookieName  string `yaml:"sso_cookie_name"`
 
 	CORS *CORSConfig `yaml:"cors"`
+
+	Events *EventsConfig `yaml:"events"`
 
 	Clusters        []*ClusterConfig          `yaml:"clusters"`
 	clustersByProxy map[string]*ClusterConfig `yaml:"-"`

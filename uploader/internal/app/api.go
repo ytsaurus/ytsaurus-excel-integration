@@ -15,6 +15,7 @@ import (
 	"go.ytsaurus.tech/library/go/core/metrics"
 	"go.ytsaurus.tech/library/go/core/xerrors"
 	"go.ytsaurus.tech/yt/go/yt"
+	"go.ytsaurus.tech/yt/microservices/excel/pkg/events"
 	"go.ytsaurus.tech/yt/microservices/excel/uploader/internal/uploader"
 )
 
@@ -29,15 +30,15 @@ const (
 type API struct {
 	conf *ClusterConfig
 	yc   yt.Client
-
-	l log.Structured
+	l    log.Structured
+	ew   events.Writer
 
 	ready atomic.Bool
 }
 
 // NewAPI creates new API.
-func NewAPI(c *ClusterConfig, yc yt.Client, l log.Structured) *API {
-	return &API{conf: c, yc: yc, l: l}
+func NewAPI(c *ClusterConfig, yc yt.Client, l log.Structured, ew events.Writer) *API {
+	return &API{conf: c, yc: yc, l: l, ew: ew}
 }
 
 func (a *API) Routes() chi.Router {
@@ -156,7 +157,7 @@ func (a *API) uploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = r.MultipartForm.RemoveAll() }()
 
-	file, _, err := r.FormFile(uploadFormName)
+	file, fileHeader, err := r.FormFile(uploadFormName)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -172,7 +173,19 @@ func (a *API) uploadFile(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = xlsx.Close() }()
 	req.Data = xlsx
 
+	info := &events.UploadInfo{
+		Cluster:  a.conf.Proxy,
+		YTPath:   path,
+		Filename: fileHeader.Filename,
+		Sheet:    sheet,
+		Append:   appendRows,
+		Create:   create,
+	}
+	a.ew.Write(r.Context(), events.EventUploadStarted, info)
+
 	if err := uploader.Upload(r.Context(), a.yc, req); err != nil {
+		info.Error = err.Error()
+		a.ew.Write(r.Context(), events.EventUploadFailed, info)
 		if errors.Is(err, uploader.ErrUnauthorized) {
 			replyError(w, r, err, http.StatusUnauthorized)
 			return
@@ -184,4 +197,6 @@ func (a *API) uploadFile(w http.ResponseWriter, r *http.Request) {
 		replyError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	a.ew.Write(r.Context(), events.EventUploadSucceeded, info)
 }
