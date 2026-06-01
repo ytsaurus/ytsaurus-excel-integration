@@ -56,6 +56,28 @@ settings:
     sso_cookie_name: null
     clusters: []
 
+    # Audit event log. Disabled by default.
+    # When enabled, each export/upload is written as a JSON line to a rotating log file.
+    # volume is required when enabled. Choose based on your delivery daemon setup:
+    #   emptyDir  — if the delivery daemon runs as a sidecar in the same pod
+    #   hostPath  — if the delivery daemon runs on the node outside the pod
+    # eventLog:
+    #   enabled: true
+    #   logDir: /var/log/excel-exporter
+    #   rotationTime: 15m
+    #   maxAge: 168h
+    #   volume:
+    #     emptyDir: {}
+    #   # or:
+    #   #   hostPath:
+    #   #     path: /var/log/excel-exporter
+    #   #     type: DirectoryOrCreate
+    eventLog:
+      enabled: false
+      logDir: /var/log/excel-exporter
+      rotationTime: 15m
+      maxAge: 168h
+
   uploader:
      # http_port: ":80"
     http_port: 80
@@ -78,6 +100,20 @@ settings:
     auth_cookie_name: null
     sso_cookie_name: null
     clusters: []
+
+    # Audit event log. See exporter.eventLog comment above for details.
+    # eventLog:
+    #   enabled: true
+    #   logDir: /var/log/excel-uploader
+    #   rotationTime: 15m
+    #   maxAge: 168h
+    #   volume:
+    #     emptyDir: {}
+    eventLog:
+      enabled: false
+      logDir: /var/log/excel-uploader
+      rotationTime: 15m
+      maxAge: 168h
 
 imagePullSecrets: []
 nameOverride: ""

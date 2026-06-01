@@ -65,11 +65,22 @@ spec:
               name: config
               readOnly: true
               subPath: uploader-config.yaml
+            {{- if .Values.settings.uploader.eventLog.enabled }}
+            - mountPath: {{ .Values.settings.uploader.eventLog.logDir }}
+              name: event-log
+            {{- end }}
       volumes:
         - configMap:
             defaultMode: 420
             name: "ytsaurus-excel-cm"
           name: config
+        {{- if .Values.settings.uploader.eventLog.enabled }}
+        {{- if not .Values.settings.uploader.eventLog.volume }}
+        {{- fail "settings.uploader.eventLog.volume is required when eventLog.enabled is true" }}
+        {{- end }}
+        - name: event-log
+          {{- toYaml .Values.settings.uploader.eventLog.volume | nindent 10 }}
+        {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

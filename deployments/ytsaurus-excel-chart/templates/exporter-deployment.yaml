@@ -65,11 +65,22 @@ spec:
               name: config
               readOnly: true
               subPath: exporter-config.yaml
+            {{- if .Values.settings.exporter.eventLog.enabled }}
+            - mountPath: {{ .Values.settings.exporter.eventLog.logDir }}
+              name: event-log
+            {{- end }}
       volumes:
         - configMap:
             defaultMode: 420
             name: "ytsaurus-excel-cm"
           name: config
+        {{- if .Values.settings.exporter.eventLog.enabled }}
+        {{- if not .Values.settings.exporter.eventLog.volume }}
+        {{- fail "settings.exporter.eventLog.volume is required when eventLog.enabled is true" }}
+        {{- end }}
+        - name: event-log
+          {{- toYaml .Values.settings.exporter.eventLog.volume | nindent 10 }}
+        {{- end }}
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

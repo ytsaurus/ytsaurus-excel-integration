@@ -17,7 +17,17 @@ data:
     sso_cookie_name: {{ .Values.settings.uploader.sso_cookie_name | default .Values.settings.sso_cookie_name | quote }}
 
     clusters: {{ .Values.settings.uploader.clusters | default .Values.settings.clusters | toYaml | nindent 4 }}
-  
+    {{- with .Values.settings.uploader.eventLog }}
+    {{- if .enabled }}
+    events:
+      enabled: true
+      log_pattern: "{{ .logDir }}/events.%Y%m%d%H%M"
+      link_name: "{{ .logDir }}/events.log"
+      rotation_time: {{ .rotationTime | default "15m" }}
+      max_age: {{ .maxAge | default "168h" }}
+    {{- end }}
+    {{- end }}
+
   exporter-config.yaml: |
     cors: {{ .Values.settings.cors | toYaml | nindent 8 }}
     http_addr: ":{{- .Values.settings.exporter.http_port -}}"
@@ -29,3 +39,13 @@ data:
     sso_cookie_name: {{ .Values.settings.exporter.sso_cookie_name | default .Values.settings.sso_cookie_name | quote }}
 
     clusters: {{ .Values.settings.exporter.clusters | default .Values.settings.clusters | toYaml | nindent 4 }}
+    {{- with .Values.settings.exporter.eventLog }}
+    {{- if .enabled }}
+    events:
+      enabled: true
+      log_pattern: "{{ .logDir }}/events.%Y%m%d%H%M"
+      link_name: "{{ .logDir }}/events.log"
+      rotation_time: {{ .rotationTime | default "15m" }}
+      max_age: {{ .maxAge | default "168h" }}
+    {{- end }}
+    {{- end }}
