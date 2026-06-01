@@ -1,0 +1,41 @@
+{{- if and .Values.settings.exporter.eventLog.enabled .Values.settings.exporter.eventLog.timbertruck.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ytsaurus-excel-exporter-timbertruck-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ytsaurus-excel-chart.exporterLabels" . | nindent 4 }}
+data:
+  config.yaml: |
+    work_dir: {{ .Values.settings.exporter.eventLog.logDir }}/timbertruck
+    json_logs:
+      - name: excel-exporter-events
+        log_file: {{ .Values.settings.exporter.eventLog.logDir }}/events.log
+        queue_batch_size: 8388608
+        yt_queue:
+          - cluster: {{ .Values.settings.exporter.eventLog.timbertruck.ytProxy | required "settings.exporter.eventLog.timbertruck.ytProxy is required when timbertruck is enabled" }}
+            queue_path: {{ .Values.settings.exporter.eventLog.timbertruck.queuePath | required "settings.exporter.eventLog.timbertruck.queuePath is required when timbertruck is enabled" }}
+            producer_path: {{ .Values.settings.exporter.eventLog.timbertruck.producerPath | required "settings.exporter.eventLog.timbertruck.producerPath is required when timbertruck is enabled" }}
+{{- end }}
+---
+{{- if and .Values.settings.uploader.eventLog.enabled .Values.settings.uploader.eventLog.timbertruck.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ytsaurus-excel-uploader-timbertruck-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ytsaurus-excel-chart.uploaderLabels" . | nindent 4 }}
+data:
+  config.yaml: |
+    work_dir: {{ .Values.settings.uploader.eventLog.logDir }}/timbertruck
+    json_logs:
+      - name: excel-uploader-events
+        log_file: {{ .Values.settings.uploader.eventLog.logDir }}/events.log
+        queue_batch_size: 8388608
+        yt_queue:
+          - cluster: {{ .Values.settings.uploader.eventLog.timbertruck.ytProxy | required "settings.uploader.eventLog.timbertruck.ytProxy is required when timbertruck is enabled" }}
+            queue_path: {{ .Values.settings.uploader.eventLog.timbertruck.queuePath | required "settings.uploader.eventLog.timbertruck.queuePath is required when timbertruck is enabled" }}
+            producer_path: {{ .Values.settings.uploader.eventLog.timbertruck.producerPath | required "settings.uploader.eventLog.timbertruck.producerPath is required when timbertruck is enabled" }}
+{{- end }}

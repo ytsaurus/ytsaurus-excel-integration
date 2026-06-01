@@ -69,6 +69,29 @@ spec:
             - mountPath: {{ .Values.settings.exporter.eventLog.logDir }}
               name: event-log
             {{- end }}
+        {{- if and .Values.settings.exporter.eventLog.enabled .Values.settings.exporter.eventLog.timbertruck.enabled }}
+        - name: timbertruck
+          image: {{ .Values.settings.exporter.eventLog.timbertruck.image | required "settings.exporter.eventLog.timbertruck.image is required when timbertruck is enabled" | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/usr/bin/timbertruck_os"
+            - "-config"
+            - "/etc/timbertruck/config.yaml"
+          env:
+            - name: {{ .Values.settings.exporter.eventLog.timbertruck.tokenSecretKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.settings.exporter.eventLog.timbertruck.tokenSecretName | required "settings.exporter.eventLog.timbertruck.tokenSecretName is required when timbertruck is enabled" | quote }}
+                  key: {{ .Values.settings.exporter.eventLog.timbertruck.tokenSecretKey }}
+            - name: YT_PROXY
+              value: {{ .Values.settings.exporter.eventLog.timbertruck.ytProxy | quote }}
+          volumeMounts:
+            - mountPath: {{ .Values.settings.exporter.eventLog.logDir }}
+              name: event-log
+            - mountPath: /etc/timbertruck
+              name: timbertruck-config
+              readOnly: true
+        {{- end }}
       volumes:
         - configMap:
             defaultMode: 420
@@ -84,6 +107,12 @@ spec:
           {{- else }}
           {{- fail "settings.exporter.eventLog: either persistence.enabled or volume must be set when eventLog.enabled is true" }}
           {{- end }}
+        {{- end }}
+        {{- if and .Values.settings.exporter.eventLog.enabled .Values.settings.exporter.eventLog.timbertruck.enabled }}
+        - name: timbertruck-config
+          configMap:
+            defaultMode: 420
+            name: ytsaurus-excel-exporter-timbertruck-config
         {{- end }}
 
       {{- with .Values.nodeSelector }}

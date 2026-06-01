@@ -92,6 +92,20 @@ settings:
       #     path: /var/log/excel-exporter
       #     type: DirectoryOrCreate
 
+      # timbertruck sidecar ships event log files to a YT queue.
+      # Requires eventLog.enabled: true.
+      timbertruck:
+        enabled: false
+        image: ""
+        # ytProxy is the YT cluster HTTP proxy address.
+        ytProxy: ""
+        # queuePath and producerPath must be pre-created dynamic tables in YT.
+        queuePath: ""
+        producerPath: ""
+        # tokenSecretName is the k8s Secret containing YT_TOKEN key.
+        tokenSecretName: ""
+        tokenSecretKey: YT_TOKEN
+
   uploader:
      # http_port: ":80"
     http_port: 80
@@ -138,6 +152,20 @@ settings:
       #   hostPath:
       #     path: /var/log/excel-uploader
       #     type: DirectoryOrCreate
+
+      # timbertruck sidecar ships event log files to a YT queue.
+      # Requires eventLog.enabled: true.
+      timbertruck:
+        enabled: false
+        image: ""
+        # ytProxy is the YT cluster HTTP proxy address.
+        ytProxy: ""
+        # queuePath and producerPath must be pre-created dynamic tables in YT.
+        queuePath: ""
+        producerPath: ""
+        # tokenSecretName is the k8s Secret containing YT_TOKEN key.
+        tokenSecretName: ""
+        tokenSecretKey: YT_TOKEN
 
 imagePullSecrets: []
 nameOverride: ""
