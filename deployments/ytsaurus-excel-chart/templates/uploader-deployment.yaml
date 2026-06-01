@@ -75,11 +75,15 @@ spec:
             name: "ytsaurus-excel-cm"
           name: config
         {{- if .Values.settings.uploader.eventLog.enabled }}
-        {{- if not .Values.settings.uploader.eventLog.volume }}
-        {{- fail "settings.uploader.eventLog.volume is required when eventLog.enabled is true" }}
-        {{- end }}
         - name: event-log
+          {{- if .Values.settings.uploader.eventLog.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: ytsaurus-excel-uploader-event-log
+          {{- else if .Values.settings.uploader.eventLog.volume }}
           {{- toYaml .Values.settings.uploader.eventLog.volume | nindent 10 }}
+          {{- else }}
+          {{- fail "settings.uploader.eventLog: either persistence.enabled or volume must be set when eventLog.enabled is true" }}
+          {{- end }}
         {{- end }}
 
       {{- with .Values.nodeSelector }}

@@ -75,11 +75,15 @@ spec:
             name: "ytsaurus-excel-cm"
           name: config
         {{- if .Values.settings.exporter.eventLog.enabled }}
-        {{- if not .Values.settings.exporter.eventLog.volume }}
-        {{- fail "settings.exporter.eventLog.volume is required when eventLog.enabled is true" }}
-        {{- end }}
         - name: event-log
+          {{- if .Values.settings.exporter.eventLog.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: ytsaurus-excel-exporter-event-log
+          {{- else if .Values.settings.exporter.eventLog.volume }}
           {{- toYaml .Values.settings.exporter.eventLog.volume | nindent 10 }}
+          {{- else }}
+          {{- fail "settings.exporter.eventLog: either persistence.enabled or volume must be set when eventLog.enabled is true" }}
+          {{- end }}
         {{- end }}
 
       {{- with .Values.nodeSelector }}

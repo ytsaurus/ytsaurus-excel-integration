@@ -1,0 +1,37 @@
+{{- if and .Values.settings.exporter.eventLog.enabled .Values.settings.exporter.eventLog.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ytsaurus-excel-exporter-event-log
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ytsaurus-excel-chart.exporterLabels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.settings.exporter.eventLog.persistence.accessMode | default "ReadWriteOnce" }}
+  {{- with .Values.settings.exporter.eventLog.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.settings.exporter.eventLog.persistence.size | default "1Gi" }}
+{{- end }}
+---
+{{- if and .Values.settings.uploader.eventLog.enabled .Values.settings.uploader.eventLog.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ytsaurus-excel-uploader-event-log
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ytsaurus-excel-chart.uploaderLabels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.settings.uploader.eventLog.persistence.accessMode | default "ReadWriteOnce" }}
+  {{- with .Values.settings.uploader.eventLog.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.settings.uploader.eventLog.persistence.size | default "1Gi" }}
+{{- end }}

@@ -77,6 +77,20 @@ settings:
       logDir: /var/log/excel-exporter
       rotationTime: 15m
       maxAge: 168h
+      # persistence creates a PVC so logs survive pod restarts and upgrades.
+      # Use this when the delivery sidecar needs durable storage.
+      persistence:
+        enabled: false
+        # storageClass: ""   # leave empty to use cluster default
+        size: 1Gi
+        accessMode: ReadWriteOnce
+      # volume is used when persistence.enabled is false.
+      # Required when eventLog.enabled is true and persistence.enabled is false.
+      # volume:
+      #   emptyDir: {}
+      #   hostPath:
+      #     path: /var/log/excel-exporter
+      #     type: DirectoryOrCreate
 
   uploader:
      # http_port: ":80"
@@ -114,6 +128,16 @@ settings:
       logDir: /var/log/excel-uploader
       rotationTime: 15m
       maxAge: 168h
+      persistence:
+        enabled: false
+        # storageClass: ""
+        size: 1Gi
+        accessMode: ReadWriteOnce
+      # volume:
+      #   emptyDir: {}
+      #   hostPath:
+      #     path: /var/log/excel-uploader
+      #     type: DirectoryOrCreate
 
 imagePullSecrets: []
 nameOverride: ""
