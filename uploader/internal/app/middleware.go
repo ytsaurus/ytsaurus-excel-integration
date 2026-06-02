@@ -82,7 +82,7 @@ func requestLog(l log.Structured, bodySizeLimit int64) func(next http.Handler) h
 
 			ctx := ctxlog.WithFields(r.Context(), requestIDField)
 			ctx = withRequestID(ctx, requestID)
-			ctx = events.WithTraceContext(ctx, requestID.String(), r.Header.Get(xReqIDHTTPHeader))
+			ctx = events.WithTraceContext(ctx, requestID.String())
 			next.ServeHTTP(ww, r.WithContext(ctx))
 		})
 	}

@@ -6,15 +6,13 @@ type ctxKey struct{}
 
 type traceCtx struct {
 	fallbackTraceID string
-	parentSpanID    string
 }
 
-// WithTraceContext stores fallback trace ID and parent span ID in ctx.
-// Called from request middleware with the internal request GUID and the X-Req-Id balancer header.
-func WithTraceContext(ctx context.Context, fallbackTraceID, parentSpanID string) context.Context {
+// WithTraceContext stores a fallback trace ID in ctx.
+// Used when no OTel traceparent is propagated — typically set from the internal request GUID.
+func WithTraceContext(ctx context.Context, fallbackTraceID string) context.Context {
 	return context.WithValue(ctx, ctxKey{}, traceCtx{
 		fallbackTraceID: fallbackTraceID,
-		parentSpanID:    parentSpanID,
 	})
 }
 

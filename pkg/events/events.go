@@ -17,13 +17,21 @@ const (
 	EventExportQueryResultFailed    EventType = "export_query_result_failed"
 )
 
+// SourceType identifies the service emitting the event.
+type SourceType string
+
+const (
+	SourceExcelExporter SourceType = "excel_exporter"
+	SourceExcelUploader SourceType = "excel_uploader"
+)
+
 // Event is a single record written to the event log.
 type Event struct {
-	TraceID      string    `json:"trace_id"`
-	SpanID       string    `json:"span_id"`
-	ParentSpanID string    `json:"parent_span_id"`
-	EventType    EventType `json:"event_type"`
-	EventInfo    any       `json:"event_info"`
+	EventTimestamp int64      `json:"event_timestamp"`
+	TraceID        string     `json:"trace_id"`
+	SourceType     SourceType `json:"source_type"`
+	EventType      EventType  `json:"event_type"`
+	EventInfo      any        `json:"event_info"`
 }
 
 // UploadInfo is event_info for upload_* events.

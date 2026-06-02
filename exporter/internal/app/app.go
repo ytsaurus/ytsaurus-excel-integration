@@ -76,7 +76,7 @@ func (a *App) Run(ctx context.Context) error {
 		if maxAge == 0 {
 			maxAge = 7 * 24 * time.Hour
 		}
-		fw, err := events.NewFileWriter(ec.LogPattern, ec.LinkName, rotationTime, maxAge, a.l)
+		fw, err := events.NewFileWriter(ec.LogPattern, ec.LinkName, rotationTime, maxAge, events.SourceExcelExporter, a.l)
 		if err != nil {
 			return fmt.Errorf("creating event writer: %w", err)
 		}

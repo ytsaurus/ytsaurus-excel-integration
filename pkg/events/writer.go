@@ -10,7 +10,6 @@ import (
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.opentelemetry.io/otel/trace"
 	"go.ytsaurus.tech/library/go/core/log"
-	"go.ytsaurus.tech/yt/go/guid"
 )
 
 // Writer writes audit events to some sink.
@@ -25,14 +24,16 @@ func (NoOpWriter) Write(_ context.Context, _ EventType, _ any) {}
 
 // FileWriter writes events as JSON lines to a rotating log file.
 type FileWriter struct {
-	w io.Writer
-	l log.Structured
+	w          io.Writer
+	l          log.Structured
+	sourceType SourceType
 }
 
 // NewFileWriter creates a FileWriter with time-based log rotation.
 // pattern is a strftime pattern for rotated files, e.g. "/var/log/events.%Y%m%d%H%M".
 // linkName is the symlink pointing to the current log file.
-func NewFileWriter(pattern, linkName string, rotationTime, maxAge time.Duration, l log.Structured) (*FileWriter, error) {
+// sourceType identifies the service emitting events (e.g. "excel_exporter").
+func NewFileWriter(pattern, linkName string, rotationTime, maxAge time.Duration, sourceType SourceType, l log.Structured) (*FileWriter, error) {
 	rl, err := rotatelogs.New(
 		pattern,
 		rotatelogs.WithLinkName(linkName),
@@ -42,27 +43,25 @@ func NewFileWriter(pattern, linkName string, rotationTime, maxAge time.Duration,
 	if err != nil {
 		return nil, err
 	}
-	return &FileWriter{w: rl, l: l}, nil
+	return &FileWriter{w: rl, l: l, sourceType: sourceType}, nil
 }
 
 func (fw *FileWriter) Write(ctx context.Context, eventType EventType, info any) {
 	tc := traceContextFromContext(ctx)
 
 	traceID := tc.fallbackTraceID
-	spanID := guid.New().String()
 
-	// Prefer OTel trace/span IDs when traceparent is propagated.
+	// Prefer OTel trace ID when traceparent is propagated.
 	if sc := trace.SpanFromContext(ctx).SpanContext(); sc.IsValid() {
 		traceID = sc.TraceID().String()
-		spanID = sc.SpanID().String()
 	}
 
 	e := Event{
-		TraceID:      traceID,
-		SpanID:       spanID,
-		ParentSpanID: tc.parentSpanID,
-		EventType:    eventType,
-		EventInfo:    info,
+		EventTimestamp: time.Now().UnixMicro(),
+		TraceID:        traceID,
+		SourceType:     fw.sourceType,
+		EventType:      eventType,
+		EventInfo:      info,
 	}
 
 	data, err := json.Marshal(e)
