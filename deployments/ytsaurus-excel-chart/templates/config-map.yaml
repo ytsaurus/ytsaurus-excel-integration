@@ -21,7 +21,7 @@ data:
     {{- if .enabled }}
     events:
       enabled: true
-      log_pattern: "{{ .logDir }}/events.%Y%m%d%H%M"
+      log_pattern: "{{ .logDir }}/rotated/events.%Y%m%d%H%M"
       link_name: "{{ .logDir }}/events.log"
       rotation_time: {{ .rotationTime | default "15m" }}
       max_age: {{ .maxAge | default "168h" }}
@@ -43,7 +43,7 @@ data:
     {{- if .enabled }}
     events:
       enabled: true
-      log_pattern: "{{ .logDir }}/events.%Y%m%d%H%M"
+      log_pattern: "{{ .logDir }}/rotated/events.%Y%m%d%H%M"
       link_name: "{{ .logDir }}/events.log"
       rotation_time: {{ .rotationTime | default "15m" }}
       max_age: {{ .maxAge | default "168h" }}
