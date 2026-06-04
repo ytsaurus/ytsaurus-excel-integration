@@ -80,7 +80,8 @@ func requestLog(l log.Structured, bodySizeLimit int64) func(next http.Handler) h
 					log.Duration("duration", time.Since(t0)))
 			}()
 
-			ctx := ctxlog.WithFields(r.Context(), requestIDField)
+			ctx := events.ExtractTraceContext(r.Context(), r.Header)
+			ctx = ctxlog.WithFields(ctx, requestIDField)
 			ctx = withRequestID(ctx, requestID)
 			ctx = events.WithTraceContext(ctx, requestID.String())
 			next.ServeHTTP(ww, r.WithContext(ctx))

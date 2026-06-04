@@ -85,9 +85,10 @@ func (a *App) Run(ctx context.Context) error {
 	for _, c := range a.conf.Clusters {
 		l := log.With(a.l.Logger(), log.String("cluster", c.Proxy)).Structured()
 		yc, err := ythttp.NewClient(&yt.Config{
-			Proxy:  c.Proxy,
-			UseTLS: c.UseTLS,
-			Logger: l,
+			Proxy:   c.Proxy,
+			UseTLS:  c.UseTLS,
+			Logger:  l,
+			TraceFn: events.YTTraceFn,
 		})
 		if err != nil {
 			return err
