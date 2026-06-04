@@ -6,6 +6,13 @@ metadata:
     {{- include "ytsaurus-excel-chart.uploaderLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- if and .Values.settings.uploader.eventLog.enabled .Values.settings.uploader.eventLog.persistence.enabled }}
+  # A single ReadWriteOnce event-log PVC can't be shared by an old and a new
+  # pod during a rolling update (PVC attach conflict across nodes, and a
+  # timbertruck pid-file lock conflict on the same node), so recreate instead.
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       {{- include "ytsaurus-excel-chart.uploaderSelectorLabels" . | nindent 6 }}
