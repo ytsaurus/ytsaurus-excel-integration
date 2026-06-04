@@ -42,6 +42,20 @@ func TestYTTraceFn_RoundTripsIncomingTrace(t *testing.T) {
 	require.Equal(t, byte(1), flags)
 }
 
+func TestYTTraceFn_FallsBackToRequestID(t *testing.T) {
+	// No incoming traceparent, but a request id is stored for the event log.
+	const reqID = "25ee5634-8a8634a7-dd40b864-e6c7a52a"
+	ctx := WithTraceContext(context.Background(), reqID)
+
+	traceID, spanID, flags, ok := YTTraceFn(ctx)
+	require.True(t, ok)
+	// The trace id sent to YT must equal the event log trace_id, so the YT
+	// proxy logs and the event log can be correlated.
+	require.Equal(t, reqID, traceID.String())
+	require.NotZero(t, spanID)
+	require.Equal(t, byte(1), flags)
+}
+
 func TestYTTraceFn_NoTraceIsNoOp(t *testing.T) {
 	_, _, _, ok := YTTraceFn(context.Background())
 	require.False(t, ok)

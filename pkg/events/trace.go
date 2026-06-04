@@ -27,27 +27,56 @@ func ExtractTraceContext(ctx context.Context, h http.Header) context.Context {
 	return propagator.Extract(ctx, propagation.HeaderCarrier(h))
 }
 
-// YTTraceFn adapts the OTel span context propagated into ctx to the trace
-// parent expected by the YT client. Assign it to yt.Config.TraceFn so that
-// outgoing requests to the YT proxy carry the incoming trace.
+// YTTraceFn produces the trace parent expected by the YT client. Assign it to
+// yt.Config.TraceFn so that outgoing requests to the YT proxy share a trace
+// with the excel request that triggered them.
 //
-// It returns ok=false when no valid trace is present, which leaves the YT
+// It prefers a real W3C traceparent propagated into ctx. When none is present,
+// it falls back to the internal request id — the same value used as the event
+// log trace_id — so the event log and the YT proxy logs can be correlated even
+// for requests that arrive without a traceparent (e.g. from the UI).
+//
+// It returns ok=false only when there is no trace at all, which leaves the YT
 // client's tracing untouched (no traceparent header is added).
 func YTTraceFn(ctx context.Context) (traceID guid.GUID, spanID uint64, flags byte, ok bool) {
-	sc := trace.SpanContextFromContext(ctx)
-	if !sc.IsValid() {
-		return
+	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
+		tid := sc.TraceID()
+		high := binary.BigEndian.Uint64(tid[:8])
+		low := binary.BigEndian.Uint64(tid[8:])
+		traceID = guid.FromHalves(low, high)
+
+		sid := sc.SpanID()
+		spanID = binary.BigEndian.Uint64(sid[:])
+
+		flags = byte(sc.TraceFlags())
+
+		return traceID, spanID, flags, true
 	}
 
-	tid := sc.TraceID()
-	high := binary.BigEndian.Uint64(tid[:8])
-	low := binary.BigEndian.Uint64(tid[8:])
-	traceID = guid.FromHalves(low, high)
-
-	sid := sc.SpanID()
-	spanID = binary.BigEndian.Uint64(sid[:])
-
-	flags = byte(sc.TraceFlags())
+	// Fallback: no upstream traceparent. Reuse the request id stored for the
+	// event log (see WithTraceContext) as the trace id sent to YT, so all YT
+	// calls made for this excel request carry the same trace_id that appears in
+	// the event log.
+	tc := traceContextFromContext(ctx)
+	if tc.fallbackTraceID == "" {
+		return
+	}
+	g, err := guid.ParseString(tc.fallbackTraceID)
+	if err != nil {
+		return
+	}
+	traceID = g
+	// Derive a stable, non-zero parent span id from the trace id.
+	a, b := g.Halves()
+	switch {
+	case a != 0:
+		spanID = a
+	case b != 0:
+		spanID = b
+	default:
+		spanID = 1
+	}
+	flags = 1 // sampled
 
 	return traceID, spanID, flags, true
 }
