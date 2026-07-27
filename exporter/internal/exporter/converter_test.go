@@ -215,6 +215,69 @@ func TestConverter(t *testing.T) {
 			cell:    excelize.Cell{Value: "4291747199999999"},
 		},
 		{
+			name:    "date32",
+			colType: typeDate32,
+			in:      int64(time.Date(2000, time.December, 15, 12, 00, 00, 0, time.UTC).Unix() / 86400),
+			cell:    excelize.Cell{StyleID: styles.Date, Value: float64(36875)},
+		},
+		{
+			name:    "date32-before-epoch",
+			colType: typeDate32,
+			in:      int64(time.Date(1960, time.January, 1, 0, 0, 0, 0, time.UTC).Unix() / 86400),
+			cell: excelize.Cell{
+				StyleID: styles.Date,
+				Value:   float64(time.Date(1960, time.January, 1, 0, 0, 0, 0, time.UTC).Unix()/86400) + excelEpochOffsetDays,
+			},
+		},
+		{
+			name:    "date32-before-excel-epoch",
+			colType: typeDate32,
+			in:      int64(time.Date(1800, time.January, 1, 0, 0, 0, 0, time.UTC).Unix() / 86400),
+			cell:    excelize.Cell{Value: "1800-01-01"},
+		},
+		{
+			name:    "datetime64",
+			colType: typeDatetime64,
+			in:      int64(time.Date(2000, time.December, 15, 12, 00, 00, 0, time.UTC).Unix()),
+			cell:    excelize.Cell{StyleID: styles.Datetime, Value: 36875.5},
+		},
+		{
+			name:    "datetime64-before-excel-epoch",
+			colType: typeDatetime64,
+			in:      int64(time.Date(1800, time.January, 1, 12, 0, 0, 0, time.UTC).Unix()),
+			cell:    excelize.Cell{Value: "1800-01-01T12:00:00Z"},
+		},
+		{
+			name:    "millisecond-timestamp64",
+			colType: typeTimestamp64,
+			in:      int64(time.Date(2000, time.December, 15, 12, 00, 00, 0, time.UTC).UnixNano() / 1e3),
+			cell:    excelize.Cell{StyleID: styles.Timestamp, Value: 36875.5},
+		},
+		{
+			name:    "microsecond-timestamp64",
+			colType: typeTimestamp64,
+			in:      int64(time.Date(2000, time.December, 15, 12, 00, 00, 1100, time.UTC).UnixNano() / 1e3),
+			cell:    excelize.Cell{Value: "2000-12-15T12:00:00.000001Z"},
+		},
+		{
+			name:    "timestamp64-before-excel-epoch",
+			colType: typeTimestamp64,
+			in:      int64(time.Date(1800, time.January, 1, 12, 0, 0, 0, time.UTC).UnixNano() / 1e3),
+			cell:    excelize.Cell{Value: "1800-01-01T12:00:00Z"},
+		},
+		{
+			name:    "small-interval64",
+			colType: typeInterval64,
+			in:      int64(time.Hour / time.Microsecond),
+			cell:    excelize.Cell{StyleID: styles.Number, Value: int64(time.Hour / time.Microsecond)},
+		},
+		{
+			name:    "large-interval64",
+			colType: typeInterval64,
+			in:      int64(4291747199999999),
+			cell:    excelize.Cell{Value: "4291747199999999"},
+		},
+		{
 			name:    "any-struct",
 			colType: schema.TypeAny,
 			in: struct {

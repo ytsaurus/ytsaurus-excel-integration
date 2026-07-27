@@ -851,6 +851,10 @@ func TestGetColumnType(t *testing.T) {
 		{typeStr: "datetime", expected: schema.TypeDatetime},
 		{typeStr: "timestamp", expected: schema.TypeTimestamp},
 		{typeStr: "interval", expected: schema.TypeInterval},
+		{typeStr: "date32", expected: typeDate32},
+		{typeStr: "datetime64", expected: typeDatetime64},
+		{typeStr: "timestamp64", expected: typeTimestamp64},
+		{typeStr: "interval64", expected: typeInterval64},
 		{typeStr: "some-bad-type", expected: schema.Type("some-bad-type")}, // no error
 		{typeStr: " string ", expected: schema.TypeBytes},                  // whitespace is trimmed
 	} {
@@ -925,6 +929,72 @@ func TestConvertTimestamp(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, timestamp)
+			}
+		})
+	}
+}
+
+func TestConvertDate32(t *testing.T) {
+	for _, tc := range []struct {
+		value    string
+		expected int32
+		error    bool
+	}{
+		{value: "25569", expected: 0},
+		{value: "21915", expected: int32(float64(21915) - excelEpochOffsetDays)},
+		{value: "oops", error: true},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			date32, err := convertDate32(tc.value)
+			if tc.error {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, date32)
+			}
+		})
+	}
+}
+
+func TestConvertDatetime64(t *testing.T) {
+	for _, tc := range []struct {
+		value    string
+		expected int64
+		error    bool
+	}{
+		{value: "25569.5", expected: 12 * 60 * 60},
+		{value: "21915", expected: int64(float64(21915)*86400 - excelEpochOffsetSeconds)},
+		{value: "oops", error: true},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			datetime64, err := convertDatetime64(tc.value)
+			if tc.error {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, datetime64)
+			}
+		})
+	}
+}
+
+func TestConvertTimestamp64(t *testing.T) {
+	for _, tc := range []struct {
+		value    string
+		expected int64
+		error    bool
+	}{
+		{value: "25569", expected: 0},
+		{value: "21915", expected: int64(float64(21915)*86400*1e6 - float64(excelEpochOffsetMicroseconds))},
+		{value: "oops", error: true},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			timestamp64, err := convertTimestamp64(tc.value)
+			if tc.error {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, timestamp64)
 			}
 		})
 	}

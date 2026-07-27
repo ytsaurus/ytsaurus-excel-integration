@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 	"time"
@@ -19,15 +20,62 @@ const (
 	// SheetName stores the name of the resulting excel sheet.
 	SheetName          = "Sheet1"
 	strTimestampFormat = "2006-01-02T15:04:05.999999Z"
+	strDateFormat      = "2006-01-02"
+	strDatetimeFormat  = "2006-01-02T15:04:05Z07:00"
 	maxExcelStrLen     = 32767
 
 	day = 24 * time.Hour
+
+	// TODO: remove these types aliases when they are supported by schema package.
+	typeDate32      schema.Type = "date32"
+	typeDatetime64  schema.Type = "datetime64"
+	typeTimestamp64 schema.Type = "timestamp64"
+	typeInterval64  schema.Type = "interval64"
 )
 
 var (
 	excelEpoch = time.Date(1900, time.January, 0, 0, 0, 0, 0, time.UTC)
 	unixEpoch  = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	excelEpochOffsetDays         = unixEpoch.Add(day).Sub(excelEpoch).Hours() / 24
+	excelEpochOffsetSeconds      = unixEpoch.Add(day).Sub(excelEpoch).Seconds()
+	excelEpochOffsetMicroseconds = unixEpoch.Add(day).Sub(excelEpoch).Microseconds()
 )
+
+// asInt64 converts v to int64.
+// It is used only for YT types with a signed integer representation.
+func asInt64(v any) (int64, error) {
+	switch val := v.(type) {
+	case int64:
+		return val, nil
+	case int32:
+		return int64(val), nil
+	case int:
+		return int64(val), nil
+	case int16:
+		return int64(val), nil
+	case int8:
+		return int64(val), nil
+	case uint64:
+		if val > math.MaxInt64 {
+			return 0, xerrors.Errorf("uint64 value %d does not fit in int64", val)
+		}
+		return int64(val), nil
+	case uint32:
+		return int64(val), nil
+	case uint16:
+		return int64(val), nil
+	case uint8:
+		return int64(val), nil
+	case uint:
+		if uint64(val) > math.MaxInt64 {
+			return 0, xerrors.Errorf("uint value %d does not fit in int64", val)
+		}
+		return int64(val), nil
+	default:
+		return 0, xerrors.Errorf("expected integer, got %T", v)
+	}
+}
 
 type converter struct {
 	styles              *CellStyles
@@ -100,12 +148,12 @@ func (c *converter) convertAny(v any) (excelize.Cell, error) {
 }
 
 func (c *converter) convertDate(v any) (excelize.Cell, error) {
-	excelDate := v.(uint64) + uint64(unixEpoch.Add(day).Sub(excelEpoch).Hours()/24)
+	excelDate := v.(uint64) + uint64(excelEpochOffsetDays)
 	return excelize.Cell{StyleID: c.styles.Date, Value: excelDate}, nil
 }
 
 func (c *converter) convertDatetime(v any) (excelize.Cell, error) {
-	excelDateTime := float64(v.(uint64)+uint64(unixEpoch.Add(day).Sub(excelEpoch).Seconds())) / 86400
+	excelDateTime := float64(v.(uint64)+uint64(excelEpochOffsetSeconds)) / 86400
 	return excelize.Cell{StyleID: c.styles.Datetime, Value: excelDateTime}, nil
 }
 
@@ -116,7 +164,7 @@ func (c *converter) convertDatetime(v any) (excelize.Cell, error) {
 // All other timestamps are written as strings without information loss.
 func (c *converter) convertTimestamp(v any) (excelize.Cell, error) {
 	if v.(uint64)%1000 == 0 {
-		excelTimestamp := float64(v.(uint64)+uint64(unixEpoch.Add(day).Sub(excelEpoch).Microseconds())) / 86400 / 1e6
+		excelTimestamp := float64(v.(uint64)+uint64(excelEpochOffsetMicroseconds)) / 86400 / 1e6
 		return excelize.Cell{StyleID: c.styles.Timestamp, Value: excelTimestamp}, nil
 	}
 
@@ -126,6 +174,76 @@ func (c *converter) convertTimestamp(v any) (excelize.Cell, error) {
 }
 
 func (c *converter) convertInterval(v any) (excelize.Cell, error) {
+	return c.convertLargeIntegers(v)
+}
+
+// convertDate32 converts YT date32 to an Excel date serial number.
+//
+// YT date32 is a signed number of days since January 1, 1970.
+// Excel date is a number of days since January 1, 1900.
+// Unlike date, date32 can represent values before the Unix epoch.
+// Values before January 1, 1900 cannot be represented as Excel dates,
+// so they are written as ISO date strings without information loss.
+func (c *converter) convertDate32(v any) (excelize.Cell, error) {
+	days, err := asInt64(v)
+	if err != nil {
+		return excelize.Cell{}, err
+	}
+	excelDate := float64(days) + excelEpochOffsetDays
+	if excelDate < 1 {
+		t := time.Unix(days*86400, 0).UTC()
+		return excelize.Cell{Value: t.Format(strDateFormat)}, nil
+	}
+	return excelize.Cell{StyleID: c.styles.Date, Value: excelDate}, nil
+}
+
+// convertDatetime64 converts YT datetime64 to an Excel datetime serial number.
+//
+// YT datetime64 is a signed number of seconds since January 1, 1970.
+// Excel datetime is a floating-point day count since January 1, 1900,
+// where the fractional part represents the time of day.
+// Unlike datetime, datetime64 can represent values before the Unix epoch.
+// Values before January 1, 1900 cannot be represented as Excel datetimes,
+// so they are written as ISO datetime strings without information loss.
+func (c *converter) convertDatetime64(v any) (excelize.Cell, error) {
+	seconds, err := asInt64(v)
+	if err != nil {
+		return excelize.Cell{}, err
+	}
+	excelDateTime := (float64(seconds) + excelEpochOffsetSeconds) / 86400
+	if excelDateTime < 1 {
+		t := time.Unix(seconds, 0).UTC()
+		return excelize.Cell{Value: t.Format(strDatetimeFormat)}, nil
+	}
+	return excelize.Cell{StyleID: c.styles.Datetime, Value: excelDateTime}, nil
+}
+
+// convertTimestamp64 returns excel cell timestamp64 representation.
+//
+// Excel only supports millisecond time format.
+// Returned cell will only have Number format for timestamps that have millisecond precision.
+// All other timestamps are written as strings without information loss.
+// Values before January 1, 1900 cannot be represented as Excel timestamps,
+// so they are also written as strings.
+func (c *converter) convertTimestamp64(v any) (excelize.Cell, error) {
+	micros, err := asInt64(v)
+	if err != nil {
+		return excelize.Cell{}, err
+	}
+	excelTimestamp := float64(micros + excelEpochOffsetMicroseconds) / 86400 / 1e6
+	if excelTimestamp < 1 || micros%1000 != 0 {
+		str := time.Unix(micros/1e6, (micros%1e6)*1e3).UTC().Format(strTimestampFormat)
+		return excelize.Cell{Value: str}, nil
+	}
+	return excelize.Cell{StyleID: c.styles.Timestamp, Value: excelTimestamp}, nil
+}
+
+// convertInterval64 converts YT interval64 to an Excel cell.
+//
+// YT interval64 is a signed number of microseconds between two timestamps.
+// It is exported as a plain integer (not an Excel date), using the same
+// large-integer handling as interval and int64/uint64.
+func (c *converter) convertInterval64(v any) (excelize.Cell, error) {
 	return c.convertLargeIntegers(v)
 }
 
@@ -154,6 +272,14 @@ func (c *converter) convert(t schema.Type, v any) (excelize.Cell, error) {
 		return c.convertTimestamp(v)
 	case schema.TypeInterval:
 		return c.convertInterval(v)
+	case typeDate32:
+		return c.convertDate32(v)
+	case typeDatetime64:
+		return c.convertDatetime64(v)
+	case typeTimestamp64:
+		return c.convertTimestamp64(v)
+	case typeInterval64:
+		return c.convertInterval64(v)
 	case schema.TypeAny:
 		return c.convertAny(v)
 	default:

@@ -24,11 +24,21 @@ const (
 	ExcelMaxColCount = 16384
 
 	day = 24 * time.Hour
+
+	// TODO: remove these types aliases when they are supported by schema package.
+	typeDate32      schema.Type = "date32"
+	typeDatetime64  schema.Type = "datetime64"
+	typeTimestamp64 schema.Type = "timestamp64"
+	typeInterval64  schema.Type = "interval64"
 )
 
 var (
 	excelEpoch = time.Date(1900, time.January, 0, 0, 0, 0, 0, time.UTC)
 	unixEpoch  = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+
+	excelEpochOffsetDays         = unixEpoch.Add(day).Sub(excelEpoch).Hours() / 24
+	excelEpochOffsetSeconds      = unixEpoch.Add(day).Sub(excelEpoch).Seconds()
+	excelEpochOffsetMicroseconds = unixEpoch.Add(day).Sub(excelEpoch).Microseconds()
 )
 
 // UploadRequest represents a request to upload excel file to static yt table with strict schema.
@@ -589,6 +599,14 @@ func convert(value string, c schema.Column) (any, error) {
 		return convertTimestamp(value)
 	case schema.TypeInterval:
 		return strconv.ParseInt(value, 10, 64)
+	case typeDate32:
+		return convertDate32(value)
+	case typeDatetime64:
+		return convertDatetime64(value)
+	case typeTimestamp64:
+		return convertTimestamp64(value)
+	case typeInterval64:
+		return strconv.ParseInt(value, 10, 64)
 	default:
 		return nil, xerrors.Errorf("unexpected type %s", c.Type)
 	}
@@ -607,8 +625,20 @@ func convertDate(value string) (schema.Date, error) {
 		return 0, xerrors.Errorf("unable to convert %q to uint64: %w", value, err)
 	}
 
-	ytDate := schema.Date(v - uint64(unixEpoch.Add(day).Sub(excelEpoch).Hours()/24))
+	ytDate := schema.Date(v - uint64(excelEpochOffsetDays))
 	return ytDate, nil
+}
+
+// convertDate32 converts Excel date to YT date32.
+//
+// Excel date is a number of days since January 1, 1900.
+// YT date32 is a signed int32 number of days since January 1, 1970.
+func convertDate32(value string) (int32, error) {
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, xerrors.Errorf("unable to convert %q to float64: %w", value, err)
+	}
+	return int32(v - excelEpochOffsetDays), nil
 }
 
 // convertDatetime converts Excel datetime to YT date.
@@ -628,8 +658,20 @@ func convertDatetime(value string) (schema.Datetime, error) {
 		return 0, xerrors.Errorf("datetime value must be positive; got %v", v)
 	}
 
-	ytDatetime := schema.Datetime(uint64(v*86400) - uint64(unixEpoch.Add(day).Sub(excelEpoch).Seconds()))
+	ytDatetime := schema.Datetime(uint64(v*86400) - uint64(excelEpochOffsetSeconds))
 	return ytDatetime, nil
+}
+
+// convertDatetime64 converts Excel datetime to YT datetime64.
+//
+// Excel datetime is a number of days since January 1, 1900.
+// YT datetime64 is a signed number of seconds since January 1, 1970.
+func convertDatetime64(value string) (int64, error) {
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, xerrors.Errorf("unable to convert %q to float64: %w", value, err)
+	}
+	return int64(v*86400 - excelEpochOffsetSeconds), nil
 }
 
 // convertTimestamp converts Excel timestamp to YT date.
@@ -649,6 +691,18 @@ func convertTimestamp(value string) (schema.Timestamp, error) {
 		return 0, xerrors.Errorf("datetime value must be positive; got %v", v)
 	}
 
-	ytTimestamp := schema.Timestamp(uint64(v*86400*1e6) - uint64(unixEpoch.Add(day).Sub(excelEpoch).Microseconds()))
+	ytTimestamp := schema.Timestamp(uint64(v*86400*1e6) - uint64(excelEpochOffsetMicroseconds))
 	return ytTimestamp, nil
+}
+
+// convertTimestamp64 converts Excel datetime to YT timestamp64.
+//
+// Excel datetime is a number of days since January 1, 1900.
+// YT timestamp64 is a signed number of microseconds since January 1, 1970.
+func convertTimestamp64(value string) (int64, error) {
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, xerrors.Errorf("unable to convert %q to float64: %w", value, err)
+	}
+	return int64(v*86400*1e6 - float64(excelEpochOffsetMicroseconds)), nil
 }
