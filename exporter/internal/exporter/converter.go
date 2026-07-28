@@ -195,6 +195,7 @@ type ConvertOptions struct {
 	Schema              *schema.Schema
 	ExportOptions       *ExportOptions
 	NumberPrecisionMode NumberPrecisionMode
+	OmitTypes           bool
 }
 
 func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
@@ -207,7 +208,7 @@ func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 
 	if hasSchema {
 		nameToCol = makeHeader(opts.Columns, opts.Schema)
-		if err := writeHeader(nameToCol, out); err != nil {
+		if err := writeHeader(nameToCol, out, opts.OmitTypes); err != nil {
 			return nil, err
 		}
 		for _, col := range nameToCol {
@@ -260,7 +261,7 @@ func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 
 	totalRowWeight := 0
 	excelRowNumber := 2
-	if hasSchema {
+	if hasSchema && !opts.OmitTypes {
 		excelRowNumber++
 	}
 
@@ -292,7 +293,10 @@ func Convert(r yt.TableReader, opts *ConvertOptions) (*excelize.File, error) {
 			if err != nil {
 				errRowIndex := excelRowNumber - 1
 				if hasSchema {
-					errRowIndex = excelRowNumber - 3
+					errRowIndex = excelRowNumber - 2
+					if !opts.OmitTypes {
+						errRowIndex = excelRowNumber - 3
+					}
 				}
 				return nil, fmt.Errorf("error converting value from column %s and row %d: %w", k, errRowIndex, err)
 			}
@@ -358,18 +362,20 @@ func makeHeader(columns []string, s *schema.Schema) map[string]*Column {
 	return header
 }
 
-// writeHeader writes column names on the first row of the sheet and
-// their types on the second.
-func writeHeader(header map[string]*Column, w *excelize.File) error {
+// writeHeader writes column names on the first row of the sheet and,
+// unless omitTypes is set, their types on the second.
+func writeHeader(header map[string]*Column, w *excelize.File, omitTypes bool) error {
 	for name, col := range header {
 		axis, _ := excelize.CoordinatesToCellName(col.Index, 1)
 		if err := w.SetCellValue(SheetName, axis, name); err != nil {
 			return err
 		}
 
-		axis, _ = excelize.CoordinatesToCellName(col.Index, 2)
-		if err := w.SetCellValue(SheetName, axis, col.Column.Type); err != nil {
-			return err
+		if !omitTypes {
+			axis, _ = excelize.CoordinatesToCellName(col.Index, 2)
+			if err := w.SetCellValue(SheetName, axis, col.Column.Type); err != nil {
+				return err
+			}
 		}
 	}
 

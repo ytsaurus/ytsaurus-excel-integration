@@ -84,6 +84,10 @@ func (a *API) exportTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if values, ok := r.URL.Query()["types"]; ok {
+		req.OmitTypes = values[0] != "true"
+	}
+
 	a.l.Info("parsed url params", log.Any("export_request", req))
 
 	if err := a.validateExportRequest(r.Context(), req); err != nil {
@@ -213,6 +217,10 @@ func makeQueryResultExportRequestFromQuery(r *http.Request) (*exporter.ExportQue
 	exportRequest.Filename = r.URL.Query().Get("filename")
 
 	exportRequest.NumberPrecisionMode = exporter.NumberPrecisionMode(r.URL.Query().Get("number_precision_mode"))
+
+	if values, ok := r.URL.Query()["types"]; ok {
+		exportRequest.OmitTypes = values[0] != "true"
+	}
 
 	return &exportRequest, nil
 }

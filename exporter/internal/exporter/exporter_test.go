@@ -320,6 +320,26 @@ func TestExportFile(t *testing.T) {
 				{"", "", "4", "3"},
 			},
 		},
+		{
+			name:   "without-types",
+			schema: schema.MustInfer(&S1{}),
+			rows: []any{
+				&S1{I64: 1, UI64: 1, String: "one"},
+				&S1{I64: 2, UI64: 2, String: "two"},
+			},
+			req: &ExportRequest{
+				Path:      ypath.Path("//tmp/without-types"),
+				Columns:   []string{"i_64", "ui_64", "string"},
+				StartRow:  0,
+				RowCount:  MaxRowCount,
+				OmitTypes: true,
+			},
+			expected: [][]string{
+				{"i_64", "ui_64", "string"},
+				{"1", "1", "one"},
+				{"2", "2", "two"},
+			},
+		},
 	} {
 		t.Run(tc.req.String(), func(t *testing.T) {
 			tc.req.NumberPrecisionMode = NumberPrecisionModeString

@@ -44,6 +44,7 @@ type ExportRequest struct {
 	StartRow            int64 `json:"start_row"`
 	RowCount            int64 `json:"row_count"`
 	NumberPrecisionMode NumberPrecisionMode
+	OmitTypes           bool
 }
 
 func (r *ExportRequest) String() string {
@@ -195,6 +196,7 @@ func Export(ctx context.Context, yc yt.Client, req *ExportRequest, opts *ExportO
 		Schema:              s,
 		ExportOptions:       opts,
 		NumberPrecisionMode: req.NumberPrecisionMode,
+		OmitTypes:           req.OmitTypes,
 	}
 	out, err := Convert(in, convertOpts)
 	if err != nil {
@@ -239,6 +241,7 @@ type ExportQueryResultRequest struct {
 	UpperRowIndex       *int64
 	Columns             []string
 	NumberPrecisionMode NumberPrecisionMode
+	OmitTypes           bool
 }
 
 func (r *ExportQueryResultRequest) EnsureFileName() {
@@ -298,6 +301,7 @@ func ExportQueryResult(
 		Schema:              s,
 		ExportOptions:       opts,
 		NumberPrecisionMode: req.NumberPrecisionMode,
+		OmitTypes:           req.OmitTypes,
 	}
 	out, err := Convert(in, convertOpts)
 	if err != nil {
